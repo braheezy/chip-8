@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -58,6 +59,7 @@ func main() {
 	}
 
 	chipFilePath := os.Args[1]
+	chipFileName := filepath.Base(chipFilePath)
 	chipData, err := os.ReadFile(chipFilePath)
 	if err != nil {
 		log.Fatal(err)
@@ -70,7 +72,7 @@ func main() {
 	copy(chip8.memory[0x200:], chipData)
 
 	ebiten.SetWindowSize(displayWidth*displayScaleFactor, displayHeight*displayScaleFactor)
-	ebiten.SetWindowTitle("CHIP-8 Emulator")
+	ebiten.SetWindowTitle(chipFileName)
 	ebiten.SetTPS(cpuSpeed)
 	if err := ebiten.RunGame(chip8); err != nil && err.Error() != "user pressed escape" {
 		log.Fatal(err)
