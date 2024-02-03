@@ -16,39 +16,6 @@ const (
 	displayScaleFactor = 10
 )
 
-type CHIP8 struct {
-	// Define 4k of RAM.
-	memory [4096]byte
-
-	// Current instruction in memory to execute.
-	// pc uint16
-
-	// // Index register, holding addresses in memory.
-	// i uint16
-
-	// // CPU registers.
-	// v [16]byte
-
-	// // Delay timer. Decremented at 60Hz until 0.
-	// dt byte
-
-	// // Sound timer. Decremented at 60Hz until 0. Emits beep while not 0.
-	// st byte
-
-	// // The execution stack for subroutines
-	// stack Stack
-
-	// The current display of the program
-	display Display
-}
-
-func NewCHIP8() *CHIP8 {
-	chip8 := &CHIP8{}
-	chip8.display.onColor = Pine.RGBA()
-	chip8.display.offColor = Gold.RGBA()
-	return chip8
-}
-
 func (ch8 *CHIP8) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
 		return fmt.Errorf("user pressed escape")
