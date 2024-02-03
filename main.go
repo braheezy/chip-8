@@ -14,6 +14,8 @@ const (
 	displayHeight = 32
 	// So it can be seen on modern displays
 	displayScaleFactor = 10
+	// Set TPS of execution loop. Controls how many times per second Update() is run.
+	cpuSpeed = 60
 )
 
 func (ch8 *CHIP8) Update() error {
@@ -69,6 +71,7 @@ func main() {
 
 	ebiten.SetWindowSize(displayWidth*displayScaleFactor, displayHeight*displayScaleFactor)
 	ebiten.SetWindowTitle("CHIP-8 Emulator")
+	ebiten.SetTPS(cpuSpeed)
 	if err := ebiten.RunGame(chip8); err != nil && err.Error() != "user pressed escape" {
 		log.Fatal(err)
 	}
