@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"image/color"
 	"log"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 const (
@@ -44,16 +44,8 @@ type CHIP8 struct {
 
 func NewCHIP8() *CHIP8 {
 	chip8 := &CHIP8{}
-	chip8.display.onColor = color.RGBA{255, 0, 0, 255}
-	chip8.display.offColor = color.RGBA{0, 0, 0, 255}
-	// for i := range chip8.memory {
-	// 	chip8.memory[i] = 0x00
-	// }
-	// for i := range chip8.display {
-	// 	for j := range chip8.display[i] {
-	// 		chip8.display[i][j] = 0x00
-	// 	}
-	// }
+	chip8.display.onColor = Pine.RGBA()
+	chip8.display.offColor = Gold.RGBA()
 	return chip8
 }
 
@@ -64,14 +56,23 @@ func (ch8 *CHIP8) Update() error {
 	return nil
 }
 func (chip8 *CHIP8) Draw(screen *ebiten.Image) {
+	// Effectively clear the screen for new draw.
+	screen.Fill(chip8.display.offColor)
+
+	// Iterate over CHIP-8 display data.
 	for x := 0; x < displayWidth; x++ {
 		for y := 0; y < displayHeight; y++ {
 			if chip8.display.content[x][y] != 0 {
-				// Set the pixel color based on CHIP-8 display data
-				screen.Set(x*displayScaleFactor, y*displayScaleFactor, chip8.display.onColor)
-			} else {
-				// Set the pixel color to black if CHIP-8 display data is 0
-				screen.Set(x*displayScaleFactor, y*displayScaleFactor, chip8.display.offColor)
+				// Draw a filled rectangle for each set CHIP-8 pixel
+				vector.DrawFilledRect(
+					screen,
+					float32(x*displayScaleFactor),
+					float32(y*displayScaleFactor),
+					displayScaleFactor,
+					displayScaleFactor,
+					chip8.display.onColor,
+					false,
+				)
 			}
 		}
 	}
