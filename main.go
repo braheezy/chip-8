@@ -21,7 +21,25 @@ const (
 
 func (ch8 *CHIP8) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
-		return fmt.Errorf("user pressed escape")
+		return ebiten.Termination
+	}
+	// Execute instructions
+	for int(ch8.pc) < ch8.programSize {
+		// println("hi")
+		firstNib, secondNib := ch8.readNextInstruction()
+		switch firstNib {
+		case 0x00:
+			switch secondNib {
+			case 0xE0:
+				// Clear display
+				ch8.display.clear()
+			}
+		default:
+			fmt.Printf("Unknown instruction starting with: %X\n", firstNib)
+		}
+	}
+	if int(ch8.pc) == ch8.programSize {
+		return ebiten.Termination
 	}
 	return nil
 }
@@ -47,6 +65,7 @@ func (chip8 *CHIP8) Draw(screen *ebiten.Image) {
 		}
 	}
 }
+
 func (chip8 *CHIP8) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return displayWidth * displayScaleFactor, displayHeight * displayScaleFactor
 }
@@ -66,15 +85,15 @@ func main() {
 	}
 
 	chip8 := NewCHIP8()
+	chip8.programSize = len(chipData) + programStartAddress
 
 	// Load program into memory.
-	// In CHIP-8, the program starts at address 0x200.
-	copy(chip8.memory[0x200:], chipData)
+	copy(chip8.memory[programStartAddress:], chipData)
 
 	ebiten.SetWindowSize(displayWidth*displayScaleFactor, displayHeight*displayScaleFactor)
 	ebiten.SetWindowTitle(chipFileName)
 	ebiten.SetTPS(cpuSpeed)
-	if err := ebiten.RunGame(chip8); err != nil && err.Error() != "user pressed escape" {
+	if err := ebiten.RunGame(chip8); err != nil && err != ebiten.Termination {
 		log.Fatal(err)
 	}
 
