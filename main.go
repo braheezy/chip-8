@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -23,21 +22,7 @@ func (ch8 *CHIP8) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
 		return ebiten.Termination
 	}
-	// Execute instructions
-	for int(ch8.pc) < ch8.programSize {
-		// println("hi")
-		firstNib, secondNib := ch8.readNextInstruction()
-		switch firstNib {
-		case 0x00:
-			switch secondNib {
-			case 0xE0:
-				// Clear display
-				ch8.display.clear()
-			}
-		default:
-			fmt.Printf("Unknown instruction starting with: %X\n", firstNib)
-		}
-	}
+	ch8.process()
 	if int(ch8.pc) == ch8.programSize {
 		return ebiten.Termination
 	}

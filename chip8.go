@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 const (
 	// In CHIP-8, the program starts at address 0x200.
 	programStartAddress = 0x200
@@ -15,8 +19,8 @@ type CHIP8 struct {
 	// // Index register, holding addresses in memory.
 	// i uint16
 
-	// // CPU registers.
-	// v [16]byte
+	// CPU registers.
+	v [16]byte
 
 	// // Delay timer. Decremented at 60Hz until 0.
 	// dt byte
@@ -43,10 +47,48 @@ func NewCHIP8() *CHIP8 {
 	return chip8
 }
 
-func (ch8 *CHIP8) readNextInstruction() (uint8, uint8) {
+func (ch8 *CHIP8) readNextInstruction() uint16 {
 	// Read next instruction from memory.
-	firstNib := ch8.memory[ch8.pc] >> 4
-	secondNib := ch8.memory[ch8.pc] & 0x0F
+	first := ch8.memory[ch8.pc]
+	second := ch8.memory[ch8.pc+1]
 	ch8.pc += 2
-	return firstNib, secondNib
+	return uint16(first)<<8 | uint16(second)
+}
+
+func (ch8 *CHIP8) process() {
+	// Execute instructions
+	for int(ch8.pc) < ch8.programSize {
+		instruction := ch8.readNextInstruction()
+
+		firstNibble := instruction >> 12
+
+		switch firstNibble {
+		case 0x0:
+			secondNibble := instruction >> 8
+			if secondNibble == 0x0 {
+				lastByte := instruction & 0x00FF
+				if lastByte == 0xE0 {
+					// CLS: Clear the display
+					println("CLS found (00E0)")
+					ch8.display.clear()
+				} else if lastByte == 0xEE {
+					// RET: Return from a subroutine.
+					println("RET found (00EE), but not implemented yet")
+				}
+			} else {
+				// SYS addr: Jump to a machine code routine.
+				fmt.Printf("SYS addr not supported!: %04X\n", instruction)
+			}
+		case 0x6:
+			// LD Vx, byte
+			// Store number NN in register VX.
+			value := (instruction >> 4) & 0x0F
+			register := instruction & 0x0F
+			fmt.Printf("Loading %d into register %d\n", value, register)
+			ch8.v[register] = byte(value)
+
+		default:
+			fmt.Printf("Unsupported instruction: %04X\n", instruction)
+		}
+	}
 }
