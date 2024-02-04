@@ -15,12 +15,20 @@ const (
 	// So it can be seen on modern displays
 	displayScaleFactor = 10
 	// Set TPS of execution loop. Controls how many times per second Update() is run.
-	cpuSpeed = 60
+	cpuSpeed   = 30
+	cycleLimit = 39
+)
+
+var (
+	currentCycle = 0
 )
 
 func (ch8 *CHIP8) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
 		return ebiten.Termination
+	}
+	if currentCycle == cycleLimit {
+		return nil
 	}
 	ch8.process()
 	if int(ch8.pc) == ch8.programSize {
