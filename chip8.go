@@ -53,93 +53,91 @@ func (ch8 *CHIP8) readNextInstruction() uint16 {
 	return uint16(first)<<8 | uint16(second)
 }
 
-func (ch8 *CHIP8) runInterpreterLoop() {
-	exitDraw := false
-	// Execute instructions
-	for int(ch8.pc) < ch8.programSize {
-		instruction := ch8.readNextInstruction()
+func (ch8 *CHIP8) stepInterpreter() {
+	instruction := ch8.readNextInstruction()
 
-		firstNibble := instruction >> 12
+	firstNibble := instruction >> 12
 
-		switch firstNibble {
-		case 0x0:
-			secondNibble := (instruction >> 8) & 0xF
-			if secondNibble == 0x0 {
-				lastByte := instruction & 0x00FF
-				if lastByte == 0xE0 {
-					// CLS: Clear the display
-					debug("[%04X] CLS\n", instruction)
-					ch8.display.clear()
-				} else if lastByte == 0xEE {
-					// RET: Return from a subroutine.
-					println("RET found (00EE), but not implemented yet")
-				}
-			} else {
-				// SYS addr: Jump to a machine code routine.
-				debug("[%04X] SYS addr not supported!\n", instruction)
+	switch firstNibble {
+	case 0x0:
+		secondNibble := (instruction >> 8) & 0xF
+		if secondNibble == 0x0 {
+			lastByte := instruction & 0x00FF
+			if lastByte == 0xE0 {
+				// CLS: Clear the display
+				debug("[%04X] CLS\n", instruction)
+				ch8.display.clear()
+			} else if lastByte == 0xEE {
+				// RET: Return from a subroutine.
+				println("RET found (00EE), but not implemented yet")
 			}
-		case 0x1:
-			// 1NNN: Jump to address NNN.
-			value := instruction & 0xFFF
-			debug("[%04X] Setting pc to %03X\n", instruction, value)
-			ch8.pc = value
+		} else {
+			// SYS addr: Jump to a machine code routine.
+			debug("[%04X] SYS addr not supported!\n", instruction)
+		}
+	case 0x1:
+		// 1NNN: Jump to address NNN.
+		value := instruction & 0xFFF
+		debug("[%04X] Setting pc to %03X\n", instruction, value)
+		ch8.pc = value
 
-		case 0x6:
-			// 6XNN: Store number NN in register VX.
-			register := (instruction >> 8) & 0xF
-			value := instruction & 0xFF
-			debug("[%04X] Loading %X into register %d\n", instruction, value, register)
-			ch8.V[register] = byte(value)
+	case 0x6:
+		// 6XNN: Store number NN in register VX.
+		register := (instruction >> 8) & 0xF
+		value := instruction & 0xFF
+		debug("[%04X] Loading %X into register %d\n", instruction, value, register)
+		ch8.V[register] = byte(value)
 
-		case 0xA:
-			// ANNN: Set I to the address NNN.
-			value := instruction & 0xFFF
-			debug("[%04X] Loading %03X into I\n", instruction, value)
-			ch8.I = value
+	case 0x7:
+		// 7XNN: Add the value NN to register VX
+		register := (instruction >> 8) & 0xF
+		value := instruction & 0xFF
+		debug("[%04X] Adding %X to contents of register %d\n", instruction, value, register)
+		ch8.V[register] += byte(value)
 
-		case 0xD:
-			// DXYN" Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
-			// Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
+	case 0xA:
+		// ANNN: Set I to the address NNN.
+		value := instruction & 0xFFF
+		debug("[%04X] Loading %03X into I\n", instruction, value)
+		ch8.I = value
 
-			// 1. Determine the X, Y values of where to start drawing.
-			xReg := (instruction >> 8) & 0xF
-			drawX := ch8.V[xReg] % displayWidth
-			yReg := (instruction >> 4) & 0xF
-			drawY := ch8.V[yReg] % displayHeight
+	case 0xD:
+		// DXYN" Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
+		// Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
 
-			// 2. Set VF to 0
-			ch8.V[0xF] = 0
+		// 1. Determine the X, Y values of where to start drawing.
+		xReg := (instruction >> 8) & 0xF
+		drawX := ch8.V[xReg] % displayWidth
+		yReg := (instruction >> 4) & 0xF
+		drawY := ch8.V[yReg] % displayHeight
 
-			// 3. Determine how much sprite data to read
-			//    This is how many contiguous blocks of memory, read from I, to draw.
-			spriteHeight := instruction & 0x0F
-			debug("[%04X] Drawing sprite from %v in memory at (%X, %X)\n", instruction, ch8.I, drawX, drawY)
-			for y := uint16(0); y < spriteHeight; y++ {
-				// Each byte in the sprite data is a line of 8 pixels.
-				line := ch8.memory[ch8.I+y]
-				// Check each bit in the line to see if we need to draw.
-				for x := 0; x < 8; x++ {
-					pixel := (line >> (7 - x)) & 1
-					if pixel != 0 {
-						// Pixel is not off, draw it.
-						ch8.display.content[drawX+byte(x)][drawY+uint8(y)] ^= 1
-					} else {
-						// Reset this pixel
-						if ch8.display.content[drawX+byte(x)][drawY+uint8(y)] != 0 {
-							// This pixel was set, was turn on VF flag.
-							ch8.V[0xF] = 1
-						}
+		// 2. Set VF to 0
+		ch8.V[0xF] = 0
+
+		// 3. Determine how much sprite data to read
+		//    This is how many contiguous blocks of memory, read from I, to draw.
+		spriteHeight := instruction & 0x0F
+		debug("[%04X] Drawing sprite from %v in memory at (%X, %X)\n", instruction, ch8.I, drawX, drawY)
+		for y := uint16(0); y < spriteHeight; y++ {
+			// Each byte in the sprite data is a line of 8 pixels.
+			line := ch8.memory[ch8.I+y]
+			// Check each bit in the line to see if we need to draw.
+			for x := 0; x < 8; x++ {
+				pixel := (line >> (7 - x)) & 1
+				if pixel != 0 {
+					// Pixel is not off, draw it.
+					ch8.display.content[drawX+byte(x)][drawY+uint8(y)] ^= 1
+				} else {
+					// Reset this pixel
+					if ch8.display.content[drawX+byte(x)][drawY+uint8(y)] != 0 {
+						// This pixel was set, was turn on VF flag.
+						ch8.V[0xF] = 1
 					}
 				}
 			}
-			exitDraw = true
-
-		default:
-			warn("[%04X] Unsupported instruction!\n", instruction)
 		}
 
-		if exitDraw {
-			break
-		}
+	default:
+		warn("[%04X] Unsupported instruction!\n", instruction)
 	}
 }

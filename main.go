@@ -16,8 +16,9 @@ const (
 	// So it can be seen on modern displays
 	displayScaleFactor = 10
 	// Set TPS of execution loop. Controls how many times per second Update() is run.
-	cpuSpeed   = 30
-	cycleLimit = 39
+	cpuSpeed = 60
+	// Limit how many cycles the program is run for. For debug purposes.
+	cycleLimit = -1
 )
 
 var (
@@ -31,7 +32,7 @@ func (ch8 *CHIP8) Update() error {
 	if currentCycle == cycleLimit {
 		return nil
 	}
-	ch8.runInterpreterLoop()
+	ch8.stepInterpreter()
 	if int(ch8.pc) == ch8.programSize {
 		return ebiten.Termination
 	}
