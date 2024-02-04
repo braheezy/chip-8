@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 const (
 	// In CHIP-8, the program starts at address 0x200.
 	programStartAddress = 0x200
@@ -57,7 +53,7 @@ func (ch8 *CHIP8) readNextInstruction() uint16 {
 	return uint16(first)<<8 | uint16(second)
 }
 
-func (ch8 *CHIP8) process() {
+func (ch8 *CHIP8) runInterpreterLoop() {
 	exitDraw := false
 	// Execute instructions
 	for int(ch8.pc) < ch8.programSize {
@@ -72,8 +68,7 @@ func (ch8 *CHIP8) process() {
 				lastByte := instruction & 0x00FF
 				if lastByte == 0xE0 {
 					// CLS: Clear the display
-					println("CLS found (00E0)")
-					fmt.Printf("[%04X] CLS\n", instruction)
+					debug("[%04X] CLS\n", instruction)
 					ch8.display.clear()
 				} else if lastByte == 0xEE {
 					// RET: Return from a subroutine.
@@ -81,19 +76,25 @@ func (ch8 *CHIP8) process() {
 				}
 			} else {
 				// SYS addr: Jump to a machine code routine.
-				fmt.Printf("[%04X] SYS addr not supported!\n", instruction)
+				debug("[%04X] SYS addr not supported!\n", instruction)
 			}
+		case 0x1:
+			// 1NNN: Jump to address NNN.
+			value := instruction & 0xFFF
+			debug("[%04X] Setting pc to %03X\n", instruction, value)
+			ch8.pc = value
+
 		case 0x6:
 			// 6XNN: Store number NN in register VX.
 			register := (instruction >> 8) & 0xF
 			value := instruction & 0xFF
-			fmt.Printf("[%04X] Loading %X into register %d\n", instruction, value, register)
+			debug("[%04X] Loading %X into register %d\n", instruction, value, register)
 			ch8.V[register] = byte(value)
 
 		case 0xA:
 			// ANNN: Set I to the address NNN.
 			value := instruction & 0xFFF
-			fmt.Printf("[%04X] Loading %03X into I\n", instruction, value)
+			debug("[%04X] Loading %03X into I\n", instruction, value)
 			ch8.I = value
 
 		case 0xD:
@@ -102,10 +103,8 @@ func (ch8 *CHIP8) process() {
 
 			// 1. Determine the X, Y values of where to start drawing.
 			xReg := (instruction >> 8) & 0xF
-			fmt.Printf("Fetching X from register %d\n", xReg)
 			drawX := ch8.V[xReg] % displayWidth
 			yReg := (instruction >> 4) & 0xF
-			fmt.Printf("Fetching Y from register %d\n", yReg)
 			drawY := ch8.V[yReg] % displayHeight
 
 			// 2. Set VF to 0
@@ -114,7 +113,7 @@ func (ch8 *CHIP8) process() {
 			// 3. Determine how much sprite data to read
 			//    This is how many contiguous blocks of memory, read from I, to draw.
 			spriteHeight := instruction & 0x0F
-			fmt.Printf("[%04X] Drawing sprite from %v in memory at (%X, %X)\n", instruction, ch8.I, drawX, drawY)
+			debug("[%04X] Drawing sprite from %v in memory at (%X, %X)\n", instruction, ch8.I, drawX, drawY)
 			for y := uint16(0); y < spriteHeight; y++ {
 				// Each byte in the sprite data is a line of 8 pixels.
 				line := ch8.memory[ch8.I+y]
@@ -136,7 +135,7 @@ func (ch8 *CHIP8) process() {
 			exitDraw = true
 
 		default:
-			fmt.Printf("[%04X] Unsupported instruction!\n", instruction)
+			warn("[%04X] Unsupported instruction!\n", instruction)
 		}
 
 		if exitDraw {

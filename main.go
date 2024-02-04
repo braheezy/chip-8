@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"path/filepath"
@@ -30,7 +31,7 @@ func (ch8 *CHIP8) Update() error {
 	if currentCycle == cycleLimit {
 		return nil
 	}
-	ch8.process()
+	ch8.runInterpreterLoop()
 	if int(ch8.pc) == ch8.programSize {
 		return ebiten.Termination
 	}
@@ -63,18 +64,27 @@ func (chip8 *CHIP8) Layout(outsideWidth, outsideHeight int) (screenWidth, screen
 	return displayWidth * displayScaleFactor, displayHeight * displayScaleFactor
 }
 
+var debugFlag bool
+
+func init() {
+	flag.BoolVar(&debugFlag, "debug", false, "Show debug messages")
+	flag.Parse()
+}
+
 func main() {
-	// Read positional argument. Must be provided and must be a file.
-	// If no argument is provided, print usage and exit.
-	if len(os.Args) < 2 {
+	if len(flag.Args()) < 1 {
 		log.Fatal("No file provided.")
 	}
 
-	chipFilePath := os.Args[1]
+	chipFilePath := flag.Arg(0)
 	chipFileName := filepath.Base(chipFilePath)
 	chipData, err := os.ReadFile(chipFilePath)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if debugFlag {
+		logLevel = Debug
 	}
 
 	chip8 := NewCHIP8()

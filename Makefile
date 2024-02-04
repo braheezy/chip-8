@@ -88,6 +88,8 @@ test:
 
 run: $(BIN)
 	@exec $? 1-chip8-logo.ch8
+rund: $(BIN)
+	@exec $? -debug 1-chip8-logo.ch8
 
 debug:
 	@dlv debug --listen ":44571" --headless $(BUILD_ENTRY)
