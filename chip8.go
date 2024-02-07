@@ -24,8 +24,8 @@ type CHIP8 struct {
 	// // Sound timer. Decremented at 60Hz until 0. Emits beep while not 0.
 	// st byte
 
-	// // The execution stack for subroutines
-	// stack Stack
+	// The execution stack for subroutines
+	stack Stack
 
 	// The current display of the program
 	display Display
@@ -105,10 +105,26 @@ func (ch8 *CHIP8) stepInterpreter() {
 		}
 	case 0x1:
 		// 1NNN: Jump to address NNN.
-		value := instruction & 0xFFF
+		value := instruction.nibbles(2, 4)
 		debug("[%04X] Setting pc to %03X\n", instruction, value)
 		ch8.pc = value
 
+	case 0x2:
+		// 2NNN: Execute subroutine starting at address NNN
+		// Push the current PC to the stack, then set the PC to NNN.
+		value := instruction.nibbles(2, 4)
+		ch8.stack.Push(ch8.pc)
+		debug("[%04X] Setting pc to %03X\n", instruction, value)
+		ch8.pc = value
+
+	case 0x3:
+		// 3XNN: Skip the next instruction if VX equals NN.
+		register := instruction.nibbles(2, 2)
+		value := instruction.nibbles(3, 4)
+		debug("[%04X] Skipping next instruction if V%X == %X\n", instruction, register, value)
+		if ch8.V[register] == byte(value) {
+			ch8.pc += 2
+		}
 	case 0x6:
 		// 6XNN: Store number NN in register VX.
 		register := instruction.nibbles(2, 2)
