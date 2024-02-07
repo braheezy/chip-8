@@ -43,14 +43,36 @@ func NewCHIP8() *CHIP8 {
 	return chip8
 }
 
-func (ch8 *CHIP8) readNextInstruction() uint16 {
+func (ch8 *CHIP8) readNextInstruction() Instruction {
 	// Read next instruction from memory.
 	first := ch8.memory[ch8.pc]
 	second := ch8.memory[ch8.pc+1]
 	ch8.pc += 2
 
 	currentCycle++
-	return uint16(first)<<8 | uint16(second)
+	return Instruction(uint16(first)<<8 | uint16(second))
+}
+
+// Instruction represents a 16-bit instruction
+type Instruction uint16
+
+// Nibbles returns a slice of nibbles from start to end (inclusive) in little-endian order
+func (i Instruction) nibbles(start, end int) uint16 {
+	if start < 1 || end > 4 || start > end {
+		// Invalid range
+		return 0
+	}
+
+	// Adjust start and end to match slice indices
+	start--
+	end--
+
+	// Shift right to align the desired nibbles to the rightmost positions
+	i >>= uint(4 * (3 - end))
+
+	// Mask out the unwanted nibbles
+	mask := uint16((1 << uint(4*(end-start+1))) - 1)
+	return uint16(i) & mask
 }
 
 func (ch8 *CHIP8) stepInterpreter() {
@@ -60,16 +82,22 @@ func (ch8 *CHIP8) stepInterpreter() {
 
 	switch firstNibble {
 	case 0x0:
-		secondNibble := (instruction >> 8) & 0xF
+		secondNibble := instruction.nibbles(2, 2)
 		if secondNibble == 0x0 {
-			lastByte := instruction & 0x00FF
+			lastByte := instruction.nibbles(4, 4)
 			if lastByte == 0xE0 {
 				// CLS: Clear the display
 				debug("[%04X] CLS\n", instruction)
 				ch8.display.clear()
 			} else if lastByte == 0xEE {
 				// RET: Return from a subroutine.
-				println("RET found (00EE), but not implemented yet")
+				// Get the PC from the stack an update accordingly
+				var err error
+				debug("[%04X] RET\n", instruction)
+				ch8.pc, err = ch8.stack.Pop()
+				if err != nil {
+					panic(err)
+				}
 			}
 		} else {
 			// SYS addr: Jump to a machine code routine.
@@ -83,21 +111,21 @@ func (ch8 *CHIP8) stepInterpreter() {
 
 	case 0x6:
 		// 6XNN: Store number NN in register VX.
-		register := (instruction >> 8) & 0xF
-		value := instruction & 0xFF
+		register := instruction.nibbles(2, 2)
+		value := instruction.nibbles(3, 4)
 		debug("[%04X] Loading %X into register %d\n", instruction, value, register)
 		ch8.V[register] = byte(value)
 
 	case 0x7:
 		// 7XNN: Add the value NN to register VX
-		register := (instruction >> 8) & 0xF
-		value := instruction & 0xFF
+		register := instruction.nibbles(2, 2)
+		value := instruction.nibbles(3, 4)
 		debug("[%04X] Adding %X to contents of register %d\n", instruction, value, register)
 		ch8.V[register] += byte(value)
 
 	case 0xA:
 		// ANNN: Set I to the address NNN.
-		value := instruction & 0xFFF
+		value := instruction.nibbles(2, 4)
 		debug("[%04X] Loading %03X into I\n", instruction, value)
 		ch8.I = value
 
@@ -106,9 +134,9 @@ func (ch8 *CHIP8) stepInterpreter() {
 		// Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
 
 		// 1. Determine the X, Y values of where to start drawing.
-		xReg := (instruction >> 8) & 0xF
+		xReg := instruction.nibbles(2, 2)
 		drawX := ch8.V[xReg] % displayWidth
-		yReg := (instruction >> 4) & 0xF
+		yReg := instruction.nibbles(3, 3)
 		drawY := ch8.V[yReg] % displayHeight
 
 		// 2. Set VF to 0
@@ -116,7 +144,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 
 		// 3. Determine how much sprite data to read
 		//    This is how many contiguous blocks of memory, read from I, to draw.
-		spriteHeight := instruction & 0x0F
+		spriteHeight := instruction.nibbles(4, 4)
 		debug("[%04X] Drawing sprite from %v in memory at (%X, %X)\n", instruction, ch8.I, drawX, drawY)
 		for y := uint16(0); y < spriteHeight; y++ {
 			// Each byte in the sprite data is a line of 8 pixels.

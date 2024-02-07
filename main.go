@@ -69,10 +69,10 @@ var debugFlag bool
 
 func init() {
 	flag.BoolVar(&debugFlag, "debug", false, "Show debug messages")
-	flag.Parse()
 }
 
 func main() {
+	flag.Parse()
 	if len(flag.Args()) < 1 {
 		log.Fatal("No file provided.")
 	}
