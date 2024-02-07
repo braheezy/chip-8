@@ -20,11 +20,11 @@ type CHIP8 struct {
 	// CPU registers.
 	V [16]byte
 
-	// // Delay timer. Decremented at 60Hz until 0.
-	// dt byte
+	// Delay timer. Decremented at 60Hz until 0.
+	delayTimer byte
 
-	// // Sound timer. Decremented at 60Hz until 0. Emits beep while not 0.
-	// st byte
+	// Sound timer. Decremented at 60Hz until 0. Emits beep while not 0.
+	soundTimer byte
 
 	// The execution stack for subroutines
 	stack Stack
@@ -101,6 +101,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 			// SYS addr: Jump to a machine code routine.
 			debug("[%04X] SYS addr not supported!\n", instruction)
 		}
+
 	case 0x1:
 		// 1NNN: Jump to address NNN.
 		value := instruction.nibbles(1, 3)
@@ -298,6 +299,28 @@ func (ch8 *CHIP8) stepInterpreter() {
 					}
 				}
 			}
+		}
+
+	case 0xF:
+		lastHalf := instruction.nibbles(2, 3)
+		switch lastHalf {
+		case 0x07:
+			// FX07: Set VX to the value of the delay timer.
+			registerX := instruction.nibbles(1, 1)
+			debug("[%04X] Loading contents of delay timer into V%d\n", instruction, registerX)
+			ch8.V[registerX] = ch8.delayTimer
+
+		case 0x15:
+			// FX15: Set the delay timer to the value of register VX
+			registerX := instruction.nibbles(1, 1)
+			debug("[%04X] Setting delay timer to contents of V%d\n", instruction, registerX)
+			ch8.delayTimer = ch8.V[registerX]
+
+		case 0x18:
+			// FX18: Set the sound timer to the value of register VX
+			registerX := instruction.nibbles(1, 1)
+			debug("[%04X] Setting sound timer to contents of V%d\n", instruction, registerX)
+			ch8.soundTimer = ch8.V[registerX]
 		}
 
 	default:

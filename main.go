@@ -32,6 +32,13 @@ func (ch8 *CHIP8) Update() error {
 	if currentCycle == cycleLimit {
 		return nil
 	}
+	if ch8.delayTimer > 0 {
+		ch8.delayTimer--
+	}
+	// TODO: Implement beeping
+	if ch8.soundTimer > 0 {
+		ch8.soundTimer--
+	}
 	ch8.stepInterpreter()
 	if int(ch8.pc) == ch8.programSize {
 		return ebiten.Termination
