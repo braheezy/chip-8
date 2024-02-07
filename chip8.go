@@ -125,6 +125,25 @@ func (ch8 *CHIP8) stepInterpreter() {
 		if ch8.V[register] == byte(value) {
 			ch8.pc += 2
 		}
+
+	case 0x4:
+		// 4XNN: Skip the next instruction if VX does not equal NN.
+		register := instruction.nibbles(2, 2)
+		value := instruction.nibbles(3, 4)
+		debug("[%04X] Skipping next instruction if V%X != %X\n", instruction, register, value)
+		if ch8.V[register] != byte(value) {
+			ch8.pc += 2
+		}
+
+	case 0x5:
+		// 5XY0: Skip the next instruction if VX equals VY.
+		registerX := instruction.nibbles(2, 2)
+		registerY := instruction.nibbles(3, 3)
+		debug("[%04X] Skipping next instruction if V%X == V%X\n", instruction, registerX, registerY)
+		if ch8.V[registerX] == ch8.V[registerY] {
+			ch8.pc += 2
+		}
+
 	case 0x6:
 		// 6XNN: Store number NN in register VX.
 		register := instruction.nibbles(2, 2)
@@ -138,6 +157,15 @@ func (ch8 *CHIP8) stepInterpreter() {
 		value := instruction.nibbles(3, 4)
 		debug("[%04X] Adding %X to contents of register %d\n", instruction, value, register)
 		ch8.V[register] += byte(value)
+
+	case 0x9:
+		// 9XY0: Skip the next instruction if VX does not equal VY.
+		registerX := instruction.nibbles(2, 2)
+		registerY := instruction.nibbles(3, 3)
+		debug("[%04X] Skipping next instruction if V%X != V%X\n", instruction, registerX, registerY)
+		if ch8.V[registerX] != ch8.V[registerY] {
+			ch8.pc += 2
+		}
 
 	case 0xA:
 		// ANNN: Set I to the address NNN.
