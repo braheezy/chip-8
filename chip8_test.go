@@ -12,12 +12,13 @@ func TestNibbles(t *testing.T) {
 		end         int
 		expected    uint16
 	}{
-		{Instruction(0xABCD), 2, 2, 0xB},
-		{Instruction(0xABCD), 3, 3, 0xC},
-		{Instruction(0xABCD), 4, 4, 0xD},
-		{Instruction(0xABCD), 2, 3, 0xBC},
-		{Instruction(0xABCD), 3, 4, 0xCD},
-		{Instruction(0xABCD), 2, 4, 0xBCD},
+		{Instruction(0xABCD), 0, 0, 0xA},
+		{Instruction(0xABCD), 1, 1, 0xB},
+		{Instruction(0xABCD), 2, 2, 0xC},
+		{Instruction(0xABCD), 3, 3, 0xD},
+		{Instruction(0xABCD), 1, 2, 0xBC},
+		{Instruction(0xABCD), 2, 3, 0xCD},
+		{Instruction(0xABCD), 1, 3, 0xBCD},
 	}
 
 	for _, test := range tests {
