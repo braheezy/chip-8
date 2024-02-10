@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"math/rand"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
@@ -52,6 +54,9 @@ type CHIP8 struct {
 	// Sound timer. Decremented at 60Hz until 0. Emits beep while not 0.
 	soundTimer byte
 
+	// The beep to play, when appropriate
+	beep *audio.Player
+
 	// The execution stack for subroutines
 	stack Stack
 
@@ -62,10 +67,15 @@ type CHIP8 struct {
 	programSize int
 }
 
-func NewCHIP8() *CHIP8 {
+func NewCHIP8(program *[]byte) *CHIP8 {
 	chip8 := &CHIP8{
 		pc: programStartAddress,
 	}
+
+	chip8.programSize = len(*program) + programStartAddress
+	// Load program into memory.
+	copy(chip8.memory[programStartAddress:], *program)
+
 	chip8.display.onColor = Pine.RGBA()
 	chip8.display.offColor = Gold.RGBA()
 
@@ -76,6 +86,14 @@ func NewCHIP8() *CHIP8 {
 			chip8.memory[i*5+j] = font[i][j]
 		}
 	}
+
+	// Load sound file
+	soundFile, err := os.ReadFile("beep.mp3")
+	if err != nil {
+		panic(err)
+	}
+	ctx := audio.NewContext(44100)
+	chip8.beep = ctx.NewPlayerFromBytes(soundFile)
 
 	return chip8
 }

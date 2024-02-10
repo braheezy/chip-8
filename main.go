@@ -38,7 +38,12 @@ func (ch8 *CHIP8) Update() error {
 	}
 	// TODO: Implement beeping
 	if ch8.soundTimer > 0 {
+		ch8.beep.Play()
 		ch8.soundTimer--
+		if ch8.soundTimer == 0 {
+			ch8.beep.Close()
+			ch8.beep.Rewind()
+		}
 	}
 	// Throttle the CPU based on a configurable delay
 	elapsedTime := time.Since(lastUpdate)
@@ -104,11 +109,7 @@ func main() {
 		logLevel = Debug
 	}
 
-	chip8 := NewCHIP8()
-	chip8.programSize = len(chipData) + programStartAddress
-
-	// Load program into memory.
-	copy(chip8.memory[programStartAddress:], chipData)
+	chip8 := NewCHIP8(&chipData)
 
 	ebiten.SetWindowSize(displayWidth*displayScaleFactor, displayHeight*displayScaleFactor)
 	ebiten.SetWindowTitle(chipFileName)
