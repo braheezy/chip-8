@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -15,14 +16,14 @@ const (
 	displayHeight = 32
 	// So it can be seen on modern displays
 	displayScaleFactor = 10
-	// Set TPS of execution loop. Controls how many times per second Update() is run.
-	cpuSpeed = 60
 	// Limit how many cycles the program is run for. For debug purposes.
 	cycleLimit = -1
+	throttle   = 60
 )
 
 var (
-	currentCycle = 0
+	currentCycle int
+	lastUpdate   time.Time
 )
 
 func (ch8 *CHIP8) Update() error {
@@ -39,6 +40,14 @@ func (ch8 *CHIP8) Update() error {
 	if ch8.soundTimer > 0 {
 		ch8.soundTimer--
 	}
+	// Throttle the CPU based on a configurable delay
+	elapsedTime := time.Since(lastUpdate)
+	delay := time.Second / time.Duration(throttle)
+	if elapsedTime < delay {
+		time.Sleep(delay - elapsedTime)
+	}
+	lastUpdate = time.Now()
+
 	ch8.stepInterpreter()
 	if int(ch8.pc) == ch8.programSize {
 		return ebiten.Termination
@@ -103,7 +112,6 @@ func main() {
 
 	ebiten.SetWindowSize(displayWidth*displayScaleFactor, displayHeight*displayScaleFactor)
 	ebiten.SetWindowTitle(chipFileName)
-	ebiten.SetTPS(cpuSpeed)
 	if err := ebiten.RunGame(chip8); err != nil && err != ebiten.Termination {
 		log.Fatal(err)
 	}
