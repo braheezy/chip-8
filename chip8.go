@@ -13,6 +13,26 @@ const (
 	programStartAddress = 0x200
 )
 
+// http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#font
+var font = [16][5]byte{
+	{0xF0, 0x90, 0x90, 0x90, 0xF0}, // char0
+	{0x20, 0x60, 0x20, 0x20, 0x70}, // char1
+	{0xF0, 0x10, 0xF0, 0x80, 0xF0}, // char2
+	{0xF0, 0x10, 0xF0, 0x10, 0xF0}, // char3
+	{0x90, 0x90, 0xF0, 0x10, 0x10}, // char4
+	{0xF0, 0x80, 0xF0, 0x10, 0xF0}, // char5
+	{0xF0, 0x80, 0xF0, 0x90, 0xF0}, // char6
+	{0xF0, 0x10, 0x20, 0x40, 0x40}, // char7
+	{0xF0, 0x90, 0xF0, 0x90, 0xF0}, // char8
+	{0xF0, 0x90, 0xF0, 0x10, 0xF0}, // char9
+	{0xF0, 0x90, 0xF0, 0x90, 0x90}, // charA
+	{0xE0, 0x90, 0xE0, 0x90, 0xE0}, // charB
+	{0xF0, 0x80, 0x80, 0x80, 0xF0}, // charC
+	{0xE0, 0x90, 0x90, 0x90, 0xE0}, // charD
+	{0xF0, 0x80, 0xF0, 0x80, 0xF0}, // charE
+	{0xF0, 0x80, 0xF0, 0x80, 0x80}, // charF
+}
+
 type CHIP8 struct {
 	// Define 4k of RAM.
 	memory [4096]byte
@@ -48,6 +68,15 @@ func NewCHIP8() *CHIP8 {
 	}
 	chip8.display.onColor = Pine.RGBA()
 	chip8.display.offColor = Gold.RGBA()
+
+	// Load font into memory
+	// From 0x000 to 0x1FF
+	for i := 0; i < 16; i++ {
+		for j := 0; j < 5; j++ {
+			chip8.memory[i*5+j] = font[i][j]
+		}
+	}
+
 	return chip8
 }
 
@@ -309,29 +338,26 @@ func (ch8 *CHIP8) stepInterpreter() {
 
 	case 0xF:
 		lastHalf := instruction.nibbles(2, 3)
+		registerX := instruction.nibbles(1, 1)
 		switch lastHalf {
 		case 0x07:
 			// FX07: Set VX to the value of the delay timer.
-			registerX := instruction.nibbles(1, 1)
 			debug("[%04X] Loading contents of delay timer into V%d\n", instruction, registerX)
 			ch8.V[registerX] = ch8.delayTimer
 
 		case 0x15:
 			// FX15: Set the delay timer to the value of register VX
-			registerX := instruction.nibbles(1, 1)
 			debug("[%04X] Setting delay timer to contents of V%d\n", instruction, registerX)
 			ch8.delayTimer = ch8.V[registerX]
 
 		case 0x18:
 			// FX18: Set the sound timer to the value of register VX
-			registerX := instruction.nibbles(1, 1)
 			debug("[%04X] Setting sound timer to contents of V%d\n", instruction, registerX)
 			ch8.soundTimer = ch8.V[registerX]
 
 		case 0x1E:
 			// FX1E: Add the value of register VX to register I
 			// TODO: set VF to 1 if I “overflows” from 0FFF to above 1000 for Amiga quirk
-			registerX := instruction.nibbles(1, 1)
 			debug("[%04X] Adding contents of V%d to I\n", instruction, registerX)
 			ch8.I += uint16(ch8.V[registerX])
 
@@ -339,7 +365,6 @@ func (ch8 *CHIP8) stepInterpreter() {
 			// FX0A: Wait for key press, put hex value in VX
 			// TODO: COSMAC VIP, the key was only registered when it was pressed and then released
 			var keyBuffer []ebiten.Key
-			registerX := instruction.nibbles(1, 1)
 			inpututil.AppendPressedKeys(keyBuffer)
 			debug("[%04X] Waiting for key press and storing hex value in V%d\n", instruction, registerX)
 			if len(keyBuffer) > 0 {
@@ -349,6 +374,35 @@ func (ch8 *CHIP8) stepInterpreter() {
 				}
 			} else {
 				ch8.pc -= 2
+			}
+
+		case 0x29:
+			// FX29: Set I to the location of the sprite for the character in register VX
+			// TODO: An 8-bit register can hold two hexadecimal numbers, but this would only point to one character. The original COSMAC VIP interpreter just took the last nibble of VX and used that as the character.
+			debug("[%04X] Setting I to memory address of font character in V%d\n", instruction, registerX)
+			ch8.I = uint16(ch8.V[registerX]) * 5
+
+		case 0x33:
+			// FX33: Store the binary-coded decimal equivalent of the value stored in register VX at addresses I, I + 1, and I + 2
+			debug("[%04X] Storing BCD of V%d at memory addresses I, I + 1, and I + 2\n", instruction, registerX)
+			ch8.memory[ch8.I] = ch8.V[registerX] / 100
+			ch8.memory[ch8.I+1] = (ch8.V[registerX] / 10) % 10
+			ch8.memory[ch8.I+2] = ch8.V[registerX] % 10
+
+		case 0x55:
+			// FX55: Store registers V0 through VX in memory starting at address I
+			// TODO: Original CHIP-8 interpreter for the COSMAC VIP actually incremented the I register while it worked. Each time it stored or loaded one register, it incremented I. After the instruction was finished, I would be set to the new value I + X + 1.
+			debug("[%04X] Storing V0 through V%d at memory address I\n", instruction, registerX)
+			for i := uint16(0); i <= uint16(registerX); i++ {
+				ch8.memory[ch8.I+i] = ch8.V[i]
+			}
+
+		case 0x65:
+			// FX65: Read registers V0 through VX from memory starting at address I
+			// TODO: Original CHIP-8 interpreter for the COSMAC VIP actually incremented the I register while it worked. Each time it stored or loaded one register, it incremented I. After the instruction was finished, I would be set to the new value I + X + 1.
+			debug("[%04X] Reading V0 through V%d from memory address I\n", instruction, registerX)
+			for i := uint16(0); i <= uint16(registerX); i++ {
+				ch8.V[i] = ch8.memory[ch8.I+i]
 			}
 
 		}
