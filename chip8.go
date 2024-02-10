@@ -1,6 +1,12 @@
 package main
 
-import "math/rand"
+import (
+	"errors"
+	"math/rand"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+)
 
 const (
 	// In CHIP-8, the program starts at address 0x200.
@@ -321,9 +327,75 @@ func (ch8 *CHIP8) stepInterpreter() {
 			registerX := instruction.nibbles(1, 1)
 			debug("[%04X] Setting sound timer to contents of V%d\n", instruction, registerX)
 			ch8.soundTimer = ch8.V[registerX]
+
+		case 0x1E:
+			// FX1E: Add the value of register VX to register I
+			// TODO: set VF to 1 if I “overflows” from 0FFF to above 1000 for Amiga quirk
+			registerX := instruction.nibbles(1, 1)
+			debug("[%04X] Adding contents of V%d to I\n", instruction, registerX)
+			ch8.I += uint16(ch8.V[registerX])
+
+		case 0x0A:
+			// FX0A: Wait for key press, put hex value in VX
+			// TODO: COSMAC VIP, the key was only registered when it was pressed and then released
+			var keyBuffer []ebiten.Key
+			registerX := instruction.nibbles(1, 1)
+			inpututil.AppendPressedKeys(keyBuffer)
+			debug("[%04X] Waiting for key press and storing hex value in V%d\n", instruction, registerX)
+			if len(keyBuffer) > 0 {
+				hexKey, err := keyToHex(keyBuffer[0])
+				if err == nil {
+					ch8.V[registerX] = hexKey
+				}
+			} else {
+				ch8.pc -= 2
+			}
+
 		}
 
 	default:
 		warn("[%04X] Unsupported instruction!\n", instruction)
 	}
+}
+
+// Convert keypad key to hex value
+func keyToHex(key ebiten.Key) (byte, error) {
+	var hexValue byte
+	switch key {
+	case ebiten.KeyX:
+		hexValue = 0x0
+	case ebiten.Key1:
+		hexValue = 0x1
+	case ebiten.Key2:
+		hexValue = 0x2
+	case ebiten.Key3:
+		hexValue = 0x3
+	case ebiten.Key4:
+		hexValue = 0xC
+	case ebiten.KeyQ:
+		hexValue = 0x4
+	case ebiten.KeyW:
+		hexValue = 0x5
+	case ebiten.KeyE:
+		hexValue = 0x6
+	case ebiten.KeyR:
+		hexValue = 0xD
+	case ebiten.KeyA:
+		hexValue = 0x7
+	case ebiten.KeyS:
+		hexValue = 0x8
+	case ebiten.KeyD:
+		hexValue = 0x9
+	case ebiten.KeyF:
+		hexValue = 0xE
+	case ebiten.KeyZ:
+		hexValue = 0xA
+	case ebiten.KeyC:
+		hexValue = 0xB
+	case ebiten.KeyV:
+		hexValue = 0xF
+	default:
+		return 0, errors.New("unsupported key")
+	}
+	return hexValue, nil
 }
