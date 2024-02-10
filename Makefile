@@ -45,7 +45,7 @@ $(PURPLE)$(BOLD)Targets:$(END)
 endef
 export help_text
 
-.PHONY: test clean help build all install run debug
+.PHONY: test clean help build all install run debug test-all
 
 help:
 	@echo -e "$$help_text"
@@ -86,10 +86,9 @@ test:
 	@go test $(TEST_FILES)
 	@echo -e "$(GREEN)✅ Test is complete!$(END)"
 
+
 run: $(BIN)
-	@exec $? 1-chip8-logo.ch8
-rund: $(BIN)
-	@exec $? -debug 1-chip8-logo.ch8
+	@exec $? $(LOGO_TEST_FILE)
 
 debug:
 	@dlv debug --listen ":44571" --headless $(BUILD_ENTRY)
@@ -98,3 +97,34 @@ install: $(BIN)
 	@echo -e "$(YELLOW)🚀 Installing $(BIN) to appropriate location...$(END)"
 	@$(GOINSTALL) $(BUILD_ENTRY)
 	@echo -e "$(GREEN)✅ Installation complete!$(END)"
+
+#
+# Create targets test-# for each supported ROM test file
+#
+
+# Define the list of test files
+ROM_FILES := 2-ibm-logo.ch8 3-corax+.ch8 4-flags.ch8
+
+# Define the URL to download the file
+DOWNLOAD_URL := https://github.com/Timendus/chip8-test-suite/releases/download/v4.1
+
+# Rule to download a test file if it doesn't exist locally
+define download_file
+$(1):
+	@if [ ! -f $$@ ]; then \
+		echo "Downloading $$@"; \
+		wget -q $(DOWNLOAD_URL)/$$@; \
+	fi
+endef
+
+# Rule to run a test for a specific file
+define test_rule
+.PHONY: test-$(shell echo $(1) | cut -d'-' -f1)
+test-$(shell echo $(1) | cut -d'-' -f1): $(BIN) $(1)
+	@echo "Running test-$(shell echo $(1) | cut -d'-' -f1) for $(1)"; \
+	$$^
+endef
+
+# Create test rules for each test file
+$(foreach file,$(ROM_FILES),$(eval $(call download_file,$(file))))
+$(foreach file,$(ROM_FILES),$(eval $(call test_rule,$(file))))
