@@ -149,6 +149,8 @@ func (ch8 *CHIP8) stepInterpreter() {
 				if err != nil {
 					panic(err)
 				}
+			} else {
+				warn("[%04X] Unsupported instruction!\n", instruction)
 			}
 		} else {
 			// 0NNN: Jump to a machine code routine.
@@ -241,51 +243,54 @@ func (ch8 *CHIP8) stepInterpreter() {
 			// Set VF to 01 if a carry occurs
 			// Set VF to 00 if a carry does not occur
 			debug("[%04X] Adding V%d to V%d and storing into V%d\n", instruction, registerY, registerX, registerX)
+			carry := uint16(ch8.V[registerX])+uint16(ch8.V[registerY]) > 0xFF
+			ch8.V[registerX] += ch8.V[registerY]
 			ch8.V[0xF] = 0
-			sum := uint16(ch8.V[registerX]) + uint16(ch8.V[registerY])
-			if sum > 0xFF {
+			if carry {
 				ch8.V[0xF] = 1
 			}
-			ch8.V[registerX] += ch8.V[registerY]
 
 		case 0x5:
 			// 8XY5: Subtract the value of register VY from register VX
 			// Set VF to 00 if a borrow occurs
 			// Set VF to 01 if a borrow does not occur
 			debug("[%04X] Subtracting V%d from V%d and storing into V%d\n", instruction, registerY, registerX, registerX)
+			borrow := ch8.V[registerY] > ch8.V[registerX]
+			ch8.V[registerX] -= ch8.V[registerY]
 			ch8.V[0xF] = 1
-			if ch8.V[registerY] > ch8.V[registerX] {
+			if borrow {
 				ch8.V[0xF] = 0
 			}
-			ch8.V[registerX] -= ch8.V[registerY]
 
 		case 0x6:
 			// 8XY6: Store the value of register VY shifted right one bit in register VX
 			// Set VF to the least significant bit prior to the shift.
 			// TODO: COSMAC VIP: Set VX to value in VY first
 			debug("[%04X] Shifting V%d right and storing into V%d\n", instruction, registerY, registerX)
-			ch8.V[0xF] = ch8.V[registerY] & 0x1
-			ch8.V[registerX] = ch8.V[registerY] >> 1
+			value := ch8.V[registerY]
+			ch8.V[registerX] = value >> 1
+			ch8.V[0xF] = value & 0x1
 
 		case 0x7:
 			// 8XY7: Subtract the value of register VX from register VY
 			// Set VF to 00 if a borrow occurs
 			// Set VF to 01 if a borrow does not occur
 			debug("[%04X] Subtracting V%d from V%d and storing into V%d\n", instruction, registerX, registerY, registerX)
+			borrow := ch8.V[registerX] > ch8.V[registerY]
+			ch8.V[registerX] = ch8.V[registerY] - ch8.V[registerX]
 			ch8.V[0xF] = 1
-			if ch8.V[registerX] > ch8.V[registerY] {
+			if borrow {
 				ch8.V[0xF] = 0
 			}
-			ch8.V[registerX] = ch8.V[registerY] - ch8.V[registerX]
 
 		case 0xE:
 			// 8XYE: Store the value of register VY shifted left one bit in register VX
 			// Set VF to the least significant bit prior to the shift.
 			// TODO: COSMAC VIP: Set VX to value in VY first
 			debug("[%04X] Shifting V%d right and storing into V%d\n", instruction, registerY, registerX)
-			ch8.V[0xF] = ch8.V[registerY] >> 7
-			ch8.V[registerX] = ch8.V[registerY] << 1
-
+			value := ch8.V[registerY]
+			ch8.V[registerX] = value << 1
+			ch8.V[0xF] = value >> 7
 		}
 
 	case 0x9:
