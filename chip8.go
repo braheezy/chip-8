@@ -118,12 +118,12 @@ func (ch8 *CHIP8) stepInterpreter() {
 		secondNibble := instruction.nibbles(1, 1)
 		if secondNibble == 0x0 {
 			lastByte := instruction.nibbles(3, 3)
-			if lastByte == 0xE0 {
-				// CLS: Clear the display
+			if lastByte == 0x0 {
+				// 00E0: Clear the display
 				debug("[%04X] CLS\n", instruction)
 				ch8.display.clear()
-			} else if lastByte == 0xEE {
-				// RET: Return from a subroutine.
+			} else if lastByte == 0xE {
+				// 00EE: Return from a subroutine.
 				// Get the PC from the stack an update accordingly
 				var err error
 				debug("[%04X] RET\n", instruction)
@@ -133,8 +133,8 @@ func (ch8 *CHIP8) stepInterpreter() {
 				}
 			}
 		} else {
-			// SYS addr: Jump to a machine code routine.
-			debug("[%04X] SYS addr not supported!\n", instruction)
+			// 0NNN: Jump to a machine code routine.
+			warn("[%04X] Machine code execution not supported!\n", instruction)
 		}
 
 	case 0x1:
@@ -155,7 +155,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 		// 3XNN: Skip the next instruction if VX equals NN.
 		register := instruction.nibbles(1, 1)
 		value := instruction.nibbles(2, 3)
-		debug("[%04X] Skipping next instruction if V%X == %X\n", instruction, register, value)
+		debug("[%04X] Skipping next instruction if %X == %X\n", instruction, ch8.V[register], value)
 		if ch8.V[register] == byte(value) {
 			ch8.pc += 2
 		}
@@ -317,22 +317,35 @@ func (ch8 *CHIP8) stepInterpreter() {
 		//    This is how many contiguous blocks of memory, read from I, to draw.
 		spriteHeight := instruction.nibbles(3, 3)
 		debug("[%04X] Drawing sprite from %v in memory at (%X, %X)\n", instruction, ch8.I, drawX, drawY)
+		stop := false
 		for y := uint16(0); y < spriteHeight; y++ {
 			// Each byte in the sprite data is a line of 8 pixels.
 			line := ch8.memory[ch8.I+y]
 			// Check each bit in the line to see if we need to draw.
 			for x := 0; x < 8; x++ {
 				pixel := (line >> (7 - x)) & 1
+				xLoc := drawX + byte(x)
+				yLoc := drawY + uint8(y)
+				if xLoc >= displayWidth {
+					break
+				}
+				if yLoc >= displayHeight {
+					stop = true
+				}
 				if pixel != 0 {
 					// Pixel is not off, draw it.
-					ch8.display.content[drawX+byte(x)][drawY+uint8(y)] ^= 1
+					ch8.display.content[xLoc][yLoc] ^= 1
 				} else {
 					// Reset this pixel
-					if ch8.display.content[drawX+byte(x)][drawY+uint8(y)] != 0 {
+					if ch8.display.content[xLoc][yLoc] != 0 {
 						// This pixel was set, so turn on VF flag.
 						ch8.V[0xF] = 1
+						ch8.display.content[xLoc][yLoc] = 0
 					}
 				}
+			}
+			if stop {
+				break
 			}
 		}
 
