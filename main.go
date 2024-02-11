@@ -16,7 +16,7 @@ const (
 	displayWidth  = 64
 	displayHeight = 32
 	// So it can be seen on modern displays
-	displayScaleFactor = 12
+	displayScaleFactor = 10
 	// Limit how many cycles the program is run for. For debug purposes.
 	cycleLimit = -1
 	// Set to throttle the CHIP-8 exec loop (to mimic older computers)
@@ -54,10 +54,15 @@ func (ch8 *CHIP8) Update() error {
 
 	if ch8.soundTimer > 0 {
 		ch8.beep.Play()
-		ch8.soundTimer--
-		if ch8.soundTimer == 0 {
-			ch8.beep.Close()
-			ch8.beep.Rewind()
+		decrementInterval := time.Second / delayTimerFrequency
+		for elapsed >= decrementInterval {
+			ch8.soundTimer--
+			elapsed -= decrementInterval
+			lastTimerUpdate = lastTimerUpdate.Add(decrementInterval)
+			if ch8.soundTimer == 0 {
+				ch8.beep.Close()
+				ch8.beep.Rewind()
+			}
 		}
 	}
 

@@ -343,7 +343,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 			ch8.V[registerX] = byte(randomNumber & int(value))
 
 		case 0xD:
-			// DXYN" Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
+			// DXYN: Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
 			// Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
 
 			// 1. Determine the X, Y values of where to start drawing.
@@ -367,23 +367,24 @@ func (ch8 *CHIP8) stepInterpreter() {
 				for x := 0; x < 8; x++ {
 					pixel := (line >> (7 - x)) & 1
 					xLoc := drawX + byte(x)
-					yLoc := drawY + uint8(y)
+					yLoc := drawY + byte(y)
 					if xLoc >= displayWidth {
+						// Move on to the next line
 						break
 					}
 					if yLoc >= displayHeight {
+						// Reached end of screen, stop drawing
 						stop = true
+
 					}
 					if pixel != 0 {
-						// Pixel is not off, draw it.
-						ch8.display.content[xLoc][yLoc] ^= 1
-					} else {
-						// Reset this pixel
 						if ch8.display.content[xLoc][yLoc] != 0 {
+							ch8.display.content[xLoc][yLoc] = 0
 							// This pixel was set, so turn on VF flag.
 							ch8.V[0xF] = 1
+						} else {
+							ch8.display.content[xLoc][yLoc] = 1
 						}
-						ch8.display.content[xLoc][yLoc] = 0
 					}
 				}
 				if stop {
@@ -512,25 +513,6 @@ func (ch8 *CHIP8) stepInterpreter() {
 		}
 	}
 }
-
-// var keyToHexMap = map[ebiten.Key]byte{
-// 	ebiten.KeyX: 0x0,
-// 	ebiten.Key1: 0x1,
-// 	ebiten.Key2: 0x2,
-// 	ebiten.Key3: 0x3,
-// 	ebiten.Key4: 0xC,
-// 	ebiten.KeyQ: 0x4,
-// 	ebiten.KeyW: 0x5,
-// 	ebiten.KeyE: 0x6,
-// 	ebiten.KeyR: 0xD,
-// 	ebiten.KeyA: 0x7,
-// 	ebiten.KeyS: 0x8,
-// 	ebiten.KeyD: 0x9,
-// 	ebiten.KeyF: 0xE,
-// 	ebiten.KeyZ: 0xA,
-// 	ebiten.KeyC: 0xB,
-// 	ebiten.KeyV: 0xF,
-// }
 
 // Convert keypad key to hex value
 func keyToHex(key ebiten.Key) (byte, error) {
