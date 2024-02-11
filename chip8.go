@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math/rand"
 	"os"
+	"slices"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -415,20 +416,13 @@ func (ch8 *CHIP8) stepInterpreter() {
 
 			case 0xA1:
 				// EXA1: Skip the next instruction if the key stored in VX is not pressed
-				hexKey := ch8.V[registerX]
 				if len(ch8.pressedKeys) == 0 {
 					debug("[%04X] Skipping next instruction b/c no keys are pressed", instruction)
 					ch8.pc += 2
 				} else {
+					hexKey := ch8.V[registerX]
 					// Some key is pressed, is it the one we care about?
-					found := false
-					for _, pressedKey := range ch8.pressedKeys {
-						if pressedKey == hexKey {
-							found = true
-							break
-						}
-					}
-					if !found {
+					if !slices.Contains(ch8.pressedKeys, hexKey) {
 						debug("[%04X] Skipping next instruction b/c %X key is not pressed", instruction, hexKey)
 						ch8.pc += 2
 					}
