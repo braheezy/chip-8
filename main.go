@@ -28,9 +28,10 @@ const (
 )
 
 var (
-	currentCycle    int
-	lastUpdate      time.Time
-	lastTimerUpdate time.Time
+	currentCycle         int
+	lastUpdate           time.Time
+	lastDelayTimerUpdate time.Time
+	lastSoundTimerUpdate time.Time
 )
 
 func (ch8 *CHIP8) Update() error {
@@ -42,28 +43,27 @@ func (ch8 *CHIP8) Update() error {
 	}
 
 	// Calculate elapsed time since last timer update
-	elapsed := time.Since(lastTimerUpdate)
+	elapsed := time.Since(lastDelayTimerUpdate)
 	if ch8.delayTimer > 0 {
 		decrementInterval := time.Second / delayTimerFrequency
 		for elapsed >= decrementInterval {
 			ch8.delayTimer--
 			elapsed -= decrementInterval
-			lastTimerUpdate = lastTimerUpdate.Add(decrementInterval)
+			lastDelayTimerUpdate = lastDelayTimerUpdate.Add(decrementInterval)
 		}
 	}
 
+	elapsed = time.Since(lastSoundTimerUpdate)
 	if ch8.soundTimer > 0 {
 		ch8.beep.Play()
-		decrementInterval := time.Second / delayTimerFrequency
+		decrementInterval := time.Second / soundTimerFrequency
 		for elapsed >= decrementInterval {
 			ch8.soundTimer--
 			elapsed -= decrementInterval
-			lastTimerUpdate = lastTimerUpdate.Add(decrementInterval)
-			if ch8.soundTimer == 0 {
-				ch8.beep.Close()
-				ch8.beep.Rewind()
-			}
+			lastSoundTimerUpdate = lastSoundTimerUpdate.Add(decrementInterval)
 		}
+	} else {
+		ch8.beep.Rewind()
 	}
 
 	// Handle input

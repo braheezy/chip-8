@@ -103,7 +103,7 @@ install: $(BIN)
 #
 
 # Define the list of test files
-ROM_FILES := 2-ibm-logo.ch8 3-corax+.ch8 4-flags.ch8 6-keypad.ch8
+ROM_FILES := 2-ibm-logo.ch8 3-corax+.ch8 4-flags.ch8 6-keypad.ch8 7-beep.ch8
 
 # Define the URL to download the file
 DOWNLOAD_URL := https://github.com/Timendus/chip8-test-suite/releases/download/v4.1

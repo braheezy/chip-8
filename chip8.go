@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"math/rand"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/mp3"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
@@ -100,8 +102,14 @@ func NewCHIP8(program *[]byte) *CHIP8 {
 	if err != nil {
 		panic(err)
 	}
-	ctx := audio.NewContext(44100)
-	chip8.beep = ctx.NewPlayerFromBytes(soundFile)
+	data, err := mp3.DecodeWithSampleRate(44100, bytes.NewReader(soundFile))
+	if err != nil {
+		panic(err)
+	}
+	chip8.beep, err = audio.NewContext(44100).NewPlayer(data)
+	if err != nil {
+		panic(err)
+	}
 
 	return chip8
 }
@@ -444,13 +452,13 @@ func (ch8 *CHIP8) stepInterpreter() {
 				// FX15: Set the delay timer to the value of register VX
 				debug("[%04X] Setting delay timer to contents of V%d\n", instruction, registerX)
 				ch8.delayTimer = ch8.V[registerX]
-				lastTimerUpdate = time.Now()
+				lastDelayTimerUpdate = time.Now()
 
 			case 0x18:
 				// FX18: Set the sound timer to the value of register VX
-				debug("[%04X] Setting sound timer to contents of V%d\n", instruction, registerX)
+				debug("[%04X] Setting sound timer to %d\n", instruction, ch8.V[registerX])
 				ch8.soundTimer = ch8.V[registerX]
-				lastTimerUpdate = time.Now()
+				lastSoundTimerUpdate = time.Now()
 
 			case 0x1E:
 				// FX1E: Add the value of register VX to register I
