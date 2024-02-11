@@ -69,6 +69,9 @@ type CHIP8 struct {
 
 	// Represent the currently pressed keys
 	pressedKeys []byte
+
+	// If set, there pressedKeys that need to be processed
+	dirtyKeys bool
 }
 
 func NewCHIP8(program *[]byte) *CHIP8 {
@@ -401,13 +404,14 @@ func (ch8 *CHIP8) stepInterpreter() {
 				// EX9E: Skip the next instruction if the key stored in VX is pressed
 				hexKey := ch8.V[registerX]
 				for _, pressedKey := range ch8.pressedKeys {
-					warn("Checking pressedKey == hexKey: %X == %X", pressedKey, hexKey)
 					if pressedKey == hexKey {
-						warn("[%04X] Skipping next instruction b/c %X key is pressed", instruction, hexKey)
+						debug("[%04X] Skipping next instruction b/c %X key is pressed", instruction, hexKey)
 						ch8.pc += 2
+						ch8.dirtyKeys = false
+						exec = false
+						break
 					}
 				}
-				exec = false
 
 			case 0xA1:
 				// EXA1: Skip the next instruction if the key stored in VX is not pressed
@@ -425,10 +429,11 @@ func (ch8 *CHIP8) stepInterpreter() {
 						}
 					}
 					if !found {
-						warn("[%04X] Skipping next instruction b/c %X key is not pressed", instruction, hexKey)
+						debug("[%04X] Skipping next instruction b/c %X key is not pressed", instruction, hexKey)
 						ch8.pc += 2
 					}
 				}
+				ch8.dirtyKeys = false
 				exec = false
 			}
 

@@ -70,6 +70,7 @@ func (ch8 *CHIP8) Update() error {
 	var keys []ebiten.Key
 	keys = inpututil.AppendPressedKeys(keys)
 	if len(keys) > 0 {
+		// For any pressed keys, convert them to hex
 		var keypresses []byte
 		for _, key := range keys {
 			keypress, err := keyToHex(key)
@@ -77,10 +78,12 @@ func (ch8 *CHIP8) Update() error {
 				keypresses = append(keypresses, keypress)
 			}
 		}
-		debug("setting ch8.pressedKeys to %v", keypresses)
 		ch8.pressedKeys = keypresses
+		ch8.dirtyKeys = true
 	} else {
-		ch8.pressedKeys = []byte{}
+		if !ch8.dirtyKeys {
+			ch8.pressedKeys = []byte{}
+		}
 	}
 
 	ch8.stepInterpreter()
