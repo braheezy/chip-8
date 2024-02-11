@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -15,15 +16,21 @@ const (
 	displayWidth  = 64
 	displayHeight = 32
 	// So it can be seen on modern displays
-	displayScaleFactor = 10
+	displayScaleFactor = 12
 	// Limit how many cycles the program is run for. For debug purposes.
 	cycleLimit = -1
-	throttle   = 60
+	// Set to throttle the CHIP-8 exec loop (to mimic older computers)
+	throttle = false
+	// Max cycle speed of CHIP-8 exec loop
+	throttleSpeed       = 60
+	delayTimerFrequency = 60 // Frequency for the delay timer (in Hz)
+	soundTimerFrequency = 60 // Frequency for the sound timer (in Hz)
 )
 
 var (
-	currentCycle int
-	lastUpdate   time.Time
+	currentCycle    int
+	lastUpdate      time.Time
+	lastTimerUpdate time.Time
 )
 
 func (ch8 *CHIP8) Update() error {
@@ -33,10 +40,18 @@ func (ch8 *CHIP8) Update() error {
 	if currentCycle == cycleLimit {
 		return nil
 	}
+
+	// Calculate elapsed time since last timer update
+	elapsed := time.Since(lastTimerUpdate)
 	if ch8.delayTimer > 0 {
-		ch8.delayTimer--
+		decrementInterval := time.Second / delayTimerFrequency
+		for elapsed >= decrementInterval {
+			ch8.delayTimer--
+			elapsed -= decrementInterval
+			lastTimerUpdate = lastTimerUpdate.Add(decrementInterval)
+		}
 	}
-	// TODO: Implement beeping
+
 	if ch8.soundTimer > 0 {
 		ch8.beep.Play()
 		ch8.soundTimer--
@@ -45,13 +60,23 @@ func (ch8 *CHIP8) Update() error {
 			ch8.beep.Rewind()
 		}
 	}
-	// Throttle the CPU based on a configurable delay
-	elapsedTime := time.Since(lastUpdate)
-	delay := time.Second / time.Duration(throttle)
-	if elapsedTime < delay {
-		time.Sleep(delay - elapsedTime)
+
+	// Handle input
+	var keys []ebiten.Key
+	keys = inpututil.AppendPressedKeys(keys)
+	if len(keys) > 0 {
+		var keypresses []byte
+		for _, key := range keys {
+			keypress, err := keyToHex(key)
+			if err == nil {
+				keypresses = append(keypresses, keypress)
+			}
+		}
+		debug("setting ch8.pressedKeys to %v", keypresses)
+		ch8.pressedKeys = keypresses
+	} else {
+		ch8.pressedKeys = []byte{}
 	}
-	lastUpdate = time.Now()
 
 	ch8.stepInterpreter()
 	if int(ch8.pc) == ch8.programSize {
@@ -113,6 +138,7 @@ func main() {
 
 	ebiten.SetWindowSize(displayWidth*displayScaleFactor, displayHeight*displayScaleFactor)
 	ebiten.SetWindowTitle(chipFileName)
+	ebiten.SetTPS(ebiten.SyncWithFPS)
 	if err := ebiten.RunGame(chip8); err != nil && err != ebiten.Termination {
 		log.Fatal(err)
 	}
