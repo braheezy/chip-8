@@ -460,13 +460,10 @@ func (ch8 *CHIP8) stepInterpreter() {
 
 			case 0x0A:
 				// FX0A: Wait for key press, put hex value in VX
-				// TODO: COSMAC VIP, the key was only registered when it was pressed and then released
-				var keyBuffer []ebiten.Key
-				inpututil.AppendPressedKeys(keyBuffer)
-				warn("[%04X] Waiting for key press and storing hex value in V%d\n", instruction, registerX)
-				if len(keyBuffer) > 0 {
-					hexKey, err := keyToHex(keyBuffer[0])
-					if err == nil {
+				if len(ch8.pressedKeys) > 0 {
+					hexKey := ch8.pressedKeys[0]
+					if inpututil.IsKeyJustReleased(ebiten.Key(hexKey)) {
+						debug("[%04X] Waited for key press and storing %X value in V%d\n", instruction, hexKey, registerX)
 						ch8.V[registerX] = hexKey
 					}
 				} else {
