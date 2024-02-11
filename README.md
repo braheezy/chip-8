@@ -1,5 +1,5 @@
-# CHIP-8 Interpreter
-Written in Go.
+# CHIP-8
+A Go implementation of a [CHIP-8 interpreter](https://www.wikiwand.com/en/CHIP-8).
 
 ## Resources
 - http://www.emulator101.com/introduction-to-chip-8.html

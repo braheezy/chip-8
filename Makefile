@@ -34,18 +34,19 @@ command-style = $(BLUE)$(BOLD)$1$(END)  $(ITALIC)$(YELLOW)$2$(END)
 
 define help_text
 $(PURPLE)$(BOLD)Targets:$(END)
-  - $(call command-style,all,    Build $(PACKAGE) for all targets (Linux, Windows, Mac, 64-bit))
-  - $(call command-style,build,  Build $(PACKAGE) for current host architecture)
-  - $(call command-style,run,    Build and run $(PACKAGE) for current host)
-  - $(call command-style,install,Build and install $(PACKAGE) for current host)
-  - $(call command-style,debug,  Run a dlv debug headless session)
-  - $(call command-style,test,   Run all tests)
-  - $(call command-style,clean,  Delete built artifacts)
-  - $(call command-style,[help], Print this help)
+  - $(call command-style,all,     Build $(PACKAGE) for all targets (Linux, Windows, Mac, 64-bit))
+  - $(call command-style,build,    Build $(PACKAGE) for current host architecture)
+  - $(call command-style,run,      Build and run $(PACKAGE) for current host)
+  - $(call command-style,install,  Build and install $(PACKAGE) for current host)
+  - $(call command-style,debug,    Run a dlv debug headless session)
+  - $(call command-style,test,     Run all Go tests)
+  - $(call command-style,test-<N>, Run a numbered ROM test)
+  - $(call command-style,clean,    Delete built artifacts)
+  - $(call command-style,[help],   Print this help)
 endef
 export help_text
 
-.PHONY: test clean help build all install run debug test-all
+.PHONY: test clean help build all install run debug
 
 help:
 	@echo -e "$$help_text"
