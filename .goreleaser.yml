@@ -1,0 +1,12 @@
+builds:
+  - binary: chip8
+    goos:
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+archives:
+  - format_overrides:
+      - goos: windows
+        format: zip
