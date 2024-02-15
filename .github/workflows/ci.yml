@@ -59,7 +59,7 @@ jobs:
           go-version: "1.21"
 
       - name: Install apt packages
-        run: sudo apt install -y libc6-dev libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libasound2-dev pkg-config
+        run: sudo apt install -y libc6-dev libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libasound2-dev pkg-config libc6-dev:i386 libgl1-mesa-dev:i386 libxcursor-dev:i386 libxi-dev:i386 libxinerama-dev:i386 libxrandr-dev:i386 libxxf86vm-dev:i386 libasound2-dev:i386 pkg-config:i386
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
