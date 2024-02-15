@@ -6,6 +6,10 @@ builds:
       - darwin
     goarch:
       - amd64
+    overrides:
+      - goos: darwin
+        env:
+          - CGO_ENABLED=0
 archives:
   - format_overrides:
       - goos: windows
