@@ -6,6 +6,8 @@ builds:
       - darwin
     goarch:
       - amd64
+    env:
+      - CGO_ENABLED=1
     overrides:
       - goos: darwin
         env:
