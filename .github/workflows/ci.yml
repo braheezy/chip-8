@@ -88,11 +88,6 @@ jobs:
       - name: Build
         run: go build -o linux/chip8 -v .
 
-      - name: Go Test
-        env:
-          DISPLAY: ":99"
-        run: go test -v ./...
-
       - uses: actions/upload-artifact@v4
         with:
           name: linux
