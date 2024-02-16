@@ -44,9 +44,6 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    env:
-      GO111MODULE: "on"
-      CGO_ENABLED: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
