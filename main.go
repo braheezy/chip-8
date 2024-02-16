@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 	"time"
@@ -32,6 +33,7 @@ var (
 	lastUpdate           time.Time
 	lastDelayTimerUpdate time.Time
 	lastSoundTimerUpdate time.Time
+	decrementInterval    = time.Second / delayTimerFrequency
 )
 
 func (ch8 *CHIP8) Update() error {
@@ -45,8 +47,7 @@ func (ch8 *CHIP8) Update() error {
 	// Calculate elapsed time since last timer update
 	elapsed := time.Since(lastDelayTimerUpdate)
 	if ch8.delayTimer > 0 {
-		decrementInterval := time.Second / delayTimerFrequency
-		for elapsed >= decrementInterval {
+		if elapsed >= decrementInterval {
 			ch8.delayTimer--
 			elapsed -= decrementInterval
 			lastDelayTimerUpdate = lastDelayTimerUpdate.Add(decrementInterval)
@@ -56,8 +57,7 @@ func (ch8 *CHIP8) Update() error {
 	elapsed = time.Since(lastSoundTimerUpdate)
 	if ch8.soundTimer > 0 {
 		ch8.beep.Play()
-		decrementInterval := time.Second / soundTimerFrequency
-		for elapsed >= decrementInterval {
+		if elapsed >= decrementInterval {
 			ch8.soundTimer--
 			elapsed -= decrementInterval
 			lastSoundTimerUpdate = lastSoundTimerUpdate.Add(decrementInterval)
@@ -93,9 +93,6 @@ func (ch8 *CHIP8) Update() error {
 	return nil
 }
 func (chip8 *CHIP8) Draw(screen *ebiten.Image) {
-	// Effectively clear the screen for new draw.
-	screen.Fill(chip8.display.offColor)
-
 	// Iterate over CHIP-8 display data.
 	for x := 0; x < displayWidth; x++ {
 		for y := 0; y < displayHeight; y++ {
@@ -110,9 +107,21 @@ func (chip8 *CHIP8) Draw(screen *ebiten.Image) {
 					chip8.display.onColor,
 					false,
 				)
+			} else {
+				// Draw a rectangle for each unset CHIP-8 pixel
+				vector.DrawFilledRect(
+					screen,
+					float32(x*displayScaleFactor),
+					float32(y*displayScaleFactor),
+					displayScaleFactor,
+					displayScaleFactor,
+					chip8.display.offColor,
+					false,
+				)
 			}
 		}
 	}
+
 }
 
 func (chip8 *CHIP8) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -123,9 +132,11 @@ var debugFlag bool
 
 func init() {
 	flag.BoolVar(&debugFlag, "debug", false, "Show debug messages")
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 }
 
 func main() {
+
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		log.Fatal("No file provided.")

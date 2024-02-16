@@ -147,6 +147,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 	exec := true
 
 	for exec {
+
 		// Throttle the CPU based on a configurable delay
 		if throttle {
 			elapsedTime := time.Since(lastUpdate)
@@ -167,9 +168,8 @@ func (ch8 *CHIP8) stepInterpreter() {
 				lastByte := instruction.nibbles(3, 3)
 				if lastByte == 0x0 {
 					// 00E0: Clear the display
-					debug("[%04X] CLS\n", instruction)
+					warn("[%04X] CLS\n", instruction)
 					ch8.display.clear()
-					exec = false
 				} else if lastByte == 0xE {
 					// 00EE: Return from a subroutine.
 					// Get the PC from the stack an update accordingly
@@ -370,37 +370,24 @@ func (ch8 *CHIP8) stepInterpreter() {
 			// 3. Determine how much sprite data to read
 			//    This is how many contiguous blocks of memory, read from I, to draw.
 			spriteHeight := instruction.nibbles(3, 3)
-			debug("[%04X] Drawing sprite from %v in memory at (%X, %X)\n", instruction, ch8.I, drawX, drawY)
-			stop := false
+			debug("[%04X] Drawing %d-sized sprite at (%d, %d)\n", instruction, spriteHeight, drawX, drawY)
 			for y := uint16(0); y < spriteHeight; y++ {
 				// Each byte in the sprite data is a line of 8 pixels.
 				line := ch8.memory[ch8.I+y]
-				// Check each bit in the line to see if we need to draw.
-				for x := 0; x < 8; x++ {
-					pixel := (line >> (7 - x)) & 1
+				yLoc := drawY + byte(y)
+				for x := 0; x < 8 && drawX+byte(x) < displayWidth && yLoc < displayHeight; x++ {
 					xLoc := drawX + byte(x)
-					yLoc := drawY + byte(y)
-					if xLoc >= displayWidth {
-						// Move on to the next line
-						break
-					}
-					if yLoc >= displayHeight {
-						// Reached end of screen, stop drawing
-						stop = true
+					pixel := (line >> (7 - x)) & 1
 
-					}
 					if pixel != 0 {
-						if ch8.display.content[xLoc][yLoc] != 0 {
-							ch8.display.content[xLoc][yLoc] = 0
-							// This pixel was set, so turn on VF flag.
+						currentPixel := ch8.display.content[xLoc][yLoc]
+						ch8.display.content[xLoc][yLoc] ^= 1
+
+						if currentPixel != 0 {
+							// Pixel was set, turn on VF flag.
 							ch8.V[0xF] = 1
-						} else {
-							ch8.display.content[xLoc][yLoc] = 1
 						}
 					}
-				}
-				if stop {
-					break
 				}
 			}
 			exec = false
@@ -477,7 +464,6 @@ func (ch8 *CHIP8) stepInterpreter() {
 				} else {
 					ch8.pc -= 2
 				}
-				exec = false
 
 			case 0x29:
 				// FX29: Set I to the location of the sprite for the character in register VX
