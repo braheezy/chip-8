@@ -112,6 +112,6 @@ jobs:
         with:
           tag_name: foo
           files: |
-            linux/
-            windows/
-            mac/
+            linux
+            windows
+            mac
