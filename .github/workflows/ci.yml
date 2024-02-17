@@ -112,6 +112,6 @@ jobs:
         with:
           tag_name: foo
           files: |
-            linux
-            windows
-            mac
+            linux/chip8
+            windows/chip8.exe
+            mac/chip8
