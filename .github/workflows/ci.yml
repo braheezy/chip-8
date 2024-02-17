@@ -27,7 +27,7 @@ jobs:
         run: go get ./...
 
       - name: Build
-        run: go build -v .
+        run: go build -v -o chip8.exe .
 
       - name: Go Test
         run: go test -v ./...
@@ -112,6 +112,6 @@ jobs:
         with:
           tag_name: foo
           files: |
-            chip8-linux
+            linux/chip8-linux
             windows/chip8.exe
-            chip8-mac
+            mac/chip8-mac
