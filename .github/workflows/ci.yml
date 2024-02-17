@@ -27,7 +27,7 @@ jobs:
         run: go get ./...
 
       - name: Build
-        run: go build -o windows/chip8.exe -v .
+        run: go build -v .
 
       - name: Go Test
         run: go test -v ./...
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: windows/
+          path: chip8.exe
 
   build-mac:
     runs-on: macos-latest
@@ -55,7 +55,7 @@ jobs:
         run: go get ./...
 
       - name: Build
-        run: go build -o mac/chip8 -v .
+        run: go build -o chip8-mac -v .
 
       - name: Go Test
         run: go test -v ./...
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mac
-          path: mac/
+          path: chip8-mac
 
   build-linux:
     runs-on: ubuntu-latest
@@ -86,12 +86,12 @@ jobs:
           go get ./...
 
       - name: Build
-        run: go build -o linux/chip8 -v .
+        run: go build -o chip8-linux -v .
 
       - uses: actions/upload-artifact@v4
         with:
           name: linux
-          path: linux/
+          path: chip8-linux
 
   release:
     # if: startsWith(github.ref, 'refs/tags/')
@@ -112,6 +112,6 @@ jobs:
         with:
           tag_name: foo
           files: |
-            linux/chip8
+            chip8-linux
             windows/chip8.exe
-            mac/chip8
+            chip8-mac
