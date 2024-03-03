@@ -2,7 +2,6 @@ name: ci
 
 on:
   push:
-  pull_request:
   workflow_dispatch:
 
 concurrency:
@@ -114,3 +113,4 @@ jobs:
             linux/chip8-linux
             windows/chip8.exe
             mac/chip8-mac
+          generate_release_notes: true
