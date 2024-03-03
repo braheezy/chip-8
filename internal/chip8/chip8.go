@@ -210,7 +210,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 				lastByte := instruction.nibbles(3, 3)
 				if lastByte == 0x0 {
 					// 00E0: Clear the display
-					ch8.Logger.Warnf("[%04X] CLS", instruction)
+					ch8.Logger.Debugf("[%04X] CLS", instruction)
 					ch8.display.clear()
 				} else if lastByte == 0xE {
 					// 00EE: Return from a subroutine.

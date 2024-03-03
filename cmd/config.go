@@ -1,0 +1,27 @@
+package cmd
+
+import (
+	"fmt"
+
+	"github.com/spf13/viper"
+)
+
+func initConfig() {
+	// Add config file search paths
+	viper.AddConfigPath("$XDG_CONFIG_HOME/chip8")
+	viper.AddConfigPath(".")
+	viper.SetConfigType("toml")
+	viper.SetConfigName("config")
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			// Config file was found but another error was produced
+			panic(fmt.Errorf("fatal error config file: %w", err))
+		}
+	}
+
+	// Use env vars
+	viper.AutomaticEnv()
+
+	// Set sane defaults
+	viper.SetDefault("DisplayScaleFactor", 10)
+}

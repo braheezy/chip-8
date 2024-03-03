@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 
 	"github.com/braheezy/chip-8/internal/chip8"
 
+	"github.com/charmbracelet/log"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -35,9 +35,8 @@ var debug bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Show debug messages")
-	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 
-	cobra.OnInitialize(setupLogger)
+	cobra.OnInitialize(initConfig)
 }
 
 func run(romFilePath string) {
@@ -48,6 +47,10 @@ func run(romFilePath string) {
 	}
 
 	app := chip8.NewDefaultApp(&chipData)
+	if debug {
+		app.Chip8.Logger.SetLevel(log.DebugLevel)
+	}
+	app.Chip8.Options.DisplayScaleFactor = viper.GetInt("displayScaleFactor")
 
 	ebiten.SetWindowSize(chip8.DisplayWidth*app.Chip8.Options.DisplayScaleFactor, chip8.DisplayHeight*app.Chip8.Options.DisplayScaleFactor)
 	ebiten.SetWindowTitle(chipFileName)
