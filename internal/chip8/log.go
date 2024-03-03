@@ -1,40 +1,18 @@
 package chip8
 
 import (
-	"log"
+	"os"
 
-	clog "github.com/charmbracelet/log"
+	"github.com/charmbracelet/log"
 )
 
-type LogLevel int
-
-const (
-	Debug LogLevel = iota
-	Info
-	Warn
-	Error
-)
-
-var logLevel = Info
-
-var logger *clog.Logger
-
-func debug(format string, args ...interface{}) {
-	if logger == nil {
-		if logLevel == Debug {
-			log.Printf(format, args...)
-		}
-	} else {
-		logger.Debug(format, args...)
-	}
+func newDefaultLogger() *log.Logger {
+	return initLogger(log.InfoLevel)
 }
 
-func warn(format string, args ...interface{}) {
-	if logger == nil {
-		if logLevel <= Warn {
-			log.Printf(format, args...)
-		}
-	} else {
-		logger.Warn(format, args...)
-	}
+func initLogger(level log.Level) *log.Logger {
+	logger := log.New(os.Stdout)
+	logger.SetLevel(level)
+
+	return logger
 }
