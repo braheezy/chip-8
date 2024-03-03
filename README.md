@@ -28,6 +28,7 @@ This table summarizes the existing configuration values and how to set them.
 |---------------|---------|------|-------------|
 | Change the display scale factor.<br>**1** uses the original 64x32 pixel display. | 10 | `display_scale_factor` | `CHIP8_DISPLAY_SCALE_FACTOR` |
 | Delay the rate the interpreter processes instructions | 0 | `throttle_speed` | `CHIP8_THROTTLE_SPEED` |
+| Stop execution after this many instructions are executed | 0 | `cycle_limit` | `CHIP8_CYCLE_LIMIT` |
 
 
 ## Resources

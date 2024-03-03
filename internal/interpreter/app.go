@@ -36,10 +36,6 @@ func (app *App) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
 		return ebiten.Termination
 	}
-	if currentCycle == app.Chip8.Options.CycleLimit {
-		return nil
-	}
-
 	// Calculate elapsed time since last timer update
 	elapsed := time.Since(lastDelayTimerUpdate)
 	if app.Chip8.delayTimer > 0 {

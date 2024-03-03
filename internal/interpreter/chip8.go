@@ -27,7 +27,6 @@ const (
 )
 
 var (
-	currentCycle         int
 	lastUpdate           time.Time
 	lastDelayTimerUpdate time.Time
 	lastSoundTimerUpdate time.Time
@@ -106,15 +105,15 @@ type CHIP8Options struct {
 	DisplayScaleFactor int `mapstructure:"display_scale_factor"`
 	// Max cycle speed of CHIP-8 exec loop
 	ThrottleSpeed int `mapstructure:"throttle_speed"`
-	// Limit how many cycles the program is run for. For debug purposes.
-	CycleLimit int `mapstructure:"cycle_limit"`
+	// Limit how many instruction_limits the program is run for. For debug purposes.
+	InstructionLimit int `mapstructure:"instruction_limit"`
 }
 
 func DefaultOptions() CHIP8Options {
 	return CHIP8Options{
 		DisplayScaleFactor: 1,
 		ThrottleSpeed:      0,
-		CycleLimit:         -1,
+		InstructionLimit:   -1,
 	}
 }
 
@@ -159,7 +158,6 @@ func (ch8 *CHIP8) readNextInstruction() Instruction {
 	second := ch8.memory[ch8.pc+1]
 	ch8.pc += 2
 
-	currentCycle++
 	return Instruction(uint16(first)<<8 | uint16(second))
 }
 
@@ -196,6 +194,11 @@ func (ch8 *CHIP8) stepInterpreter() {
 			}
 			lastUpdate = time.Now()
 		}
+
+		if ch8.Options.InstructionLimit != -1 && int(ch8.pc)/2 >= ch8.Options.InstructionLimit {
+			break
+		}
+
 		instruction := ch8.readNextInstruction()
 
 		firstNibble := instruction.nibbles(0, 0)

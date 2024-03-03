@@ -24,6 +24,7 @@ func initConfig() {
 	viper.SetEnvPrefix("chip8")
 	viper.BindEnv("display_scale_factor", "DISPLAY_SCALE_FACTOR")
 	viper.BindEnv("throttle_speed", "THROTTLE_SPEED")
+	viper.BindEnv("instruction_limit", "INSTRUCTION_LIMIT")
 
 	// Set sane defaults
 	viper.SetDefault("display_scale_factor", 10)
