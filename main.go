@@ -63,7 +63,10 @@ func (ch8 *CHIP8) Update() error {
 			lastSoundTimerUpdate = lastSoundTimerUpdate.Add(decrementInterval)
 		}
 	} else {
-		ch8.beep.Rewind()
+		if ch8.beep.IsPlaying() {
+			ch8.beep.Pause()
+			ch8.beep.SetPosition(0)
+		}
 	}
 
 	// Handle input
