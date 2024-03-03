@@ -1,4 +1,4 @@
 *.ch8
 bin/
-./chip8
+/chip8
 TODO

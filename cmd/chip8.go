@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/braheezy/chip-8/internal/chip8"
+	chip8 "github.com/braheezy/chip-8/internal/interpreter"
 
 	"github.com/charmbracelet/log"
 	"github.com/hajimehoshi/ebiten/v2"
