@@ -1,4 +1,4 @@
-package chip8
+package interpreter
 
 import (
 	"bytes"
@@ -107,21 +107,20 @@ type CHIP8Options struct {
 	ThrottleSpeed int `mapstructure:"throttle_speed"`
 	// Limit how many instruction_limits the program is run for. For debug purposes.
 	InstructionLimit int `mapstructure:"instruction_limit"`
+	// Enable quirks for COSMAC-like behavior
+	CosmacQuirks COSMACQuirks `mapstructure:"cosmac-vip"`
 }
 
-func DefaultOptions() CHIP8Options {
-	return CHIP8Options{
-		DisplayScaleFactor: 1,
-		ThrottleSpeed:      0,
-		InstructionLimit:   -1,
-	}
+type COSMACQuirks struct {
+	// If set, reset VF to 0 during instructions 8XY1, 8XY2, 8XY3
+	ResetVF bool `mapstructure:"reset_vf"`
 }
 
-func NewCHIP8WithOptions(program *[]byte, opts CHIP8Options) *CHIP8 {
+// NewDefaultApp creates a new App with default options.
+func NewCHIP8(program *[]byte) *CHIP8 {
 	chip8 := &CHIP8{
 		pc:      programStartAddress,
-		Options: opts,
-		Logger:  newDefaultLogger(),
+		Options: DefaultCHIP8Options(),
 	}
 
 	chip8.programSize = len(*program) + programStartAddress
@@ -150,6 +149,14 @@ func NewCHIP8WithOptions(program *[]byte, opts CHIP8Options) *CHIP8 {
 	}
 
 	return chip8
+}
+
+func DefaultCHIP8Options() CHIP8Options {
+	return CHIP8Options{
+		DisplayScaleFactor: 1,
+		ThrottleSpeed:      0,
+		InstructionLimit:   -1,
+	}
 }
 
 func (ch8 *CHIP8) readNextInstruction() Instruction {
@@ -300,16 +307,25 @@ func (ch8 *CHIP8) stepInterpreter() {
 				// 8XY1: Set VX to VX OR VY.
 				ch8.Logger.Debugf("[%04X] Loading (V%d | V%d) into V%d", instruction, registerY, registerX, registerX)
 				ch8.V[registerX] |= ch8.V[registerY]
+				if ch8.Options.CosmacQuirks.ResetVF {
+					ch8.V[0xF] = 0
+				}
 
 			case 0x2:
 				// 8XY2: Set VX to VX AND VY.
 				ch8.Logger.Debugf("[%04X] Loading (V%d & V%d) into V%d", instruction, registerY, registerX, registerX)
 				ch8.V[registerX] &= ch8.V[registerY]
+				if ch8.Options.CosmacQuirks.ResetVF {
+					ch8.V[0xF] = 0
+				}
 
 			case 0x3:
 				// 8XY3: Set VX to VX XOR VY.
 				ch8.Logger.Debugf("[%04X] Loading (V%d XOR V%d) into V%d", instruction, registerY, registerX, registerX)
 				ch8.V[registerX] ^= ch8.V[registerY]
+				if ch8.Options.CosmacQuirks.ResetVF {
+					ch8.V[0xF] = 0
+				}
 
 			case 0x4:
 				// 8XY4: Add the value of register VY to register VX

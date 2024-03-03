@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	chip8 "github.com/braheezy/chip-8/internal/interpreter"
+	"github.com/braheezy/chip-8/internal/interpreter"
 
 	"github.com/charmbracelet/log"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -46,13 +46,19 @@ func run(romFilePath string) {
 		log.Fatal(err)
 	}
 
-	app := chip8.NewDefaultApp(&chipData)
+	app := interpreter.NewCHIP8(&chipData)
+	logger := newDefaultLogger()
 	if debug {
-		app.Chip8.Logger.SetLevel(log.DebugLevel)
+		logger.SetLevel(log.DebugLevel)
 	}
-	viper.Unmarshal(&app.Chip8.Options)
+	app.Logger = logger
+	viper.Unmarshal(&app.Options)
 
-	ebiten.SetWindowSize(chip8.DisplayWidth*app.Chip8.Options.DisplayScaleFactor, chip8.DisplayHeight*app.Chip8.Options.DisplayScaleFactor)
+	if viper.IsSet("cosmac-vip") {
+		logger.Info("Cosmac VIP mode enabled")
+	}
+
+	ebiten.SetWindowSize(interpreter.DisplayWidth*app.Options.DisplayScaleFactor, interpreter.DisplayHeight*app.Options.DisplayScaleFactor)
 	ebiten.SetWindowTitle(chipFileName)
 	ebiten.SetTPS(ebiten.SyncWithFPS)
 

@@ -1,4 +1,4 @@
-package chip8
+package cmd
 
 import (
 	"os"
