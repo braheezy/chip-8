@@ -21,6 +21,8 @@ func initConfig() {
 
 	// Use env vars
 	viper.AutomaticEnv()
+	viper.SetEnvPrefix("chip8")
+	viper.BindEnv("display_scale_factor", "DISPLAY_SCALE_FACTOR")
 
 	// Set sane defaults
 	viper.SetDefault("display_scale_factor", 10)
