@@ -23,5 +23,5 @@ func initConfig() {
 	viper.AutomaticEnv()
 
 	// Set sane defaults
-	viper.SetDefault("DisplayScaleFactor", 10)
+	viper.SetDefault("display_scale_factor", 10)
 }

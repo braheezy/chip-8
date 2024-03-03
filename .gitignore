@@ -2,3 +2,4 @@
 bin/
 /chip8
 TODO
+/config.toml
