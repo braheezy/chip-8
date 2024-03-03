@@ -50,7 +50,7 @@ func run(romFilePath string) {
 	if debug {
 		app.Chip8.Logger.SetLevel(log.DebugLevel)
 	}
-	app.Chip8.Options.DisplayScaleFactor = viper.GetInt("display_scale_factor")
+	viper.Unmarshal(&app.Chip8.Options)
 
 	ebiten.SetWindowSize(chip8.DisplayWidth*app.Chip8.Options.DisplayScaleFactor, chip8.DisplayHeight*app.Chip8.Options.DisplayScaleFactor)
 	ebiten.SetWindowTitle(chipFileName)

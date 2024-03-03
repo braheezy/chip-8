@@ -103,20 +103,17 @@ type CHIP8 struct {
 
 type CHIP8Options struct {
 	// So it can be seen on modern displays
-	DisplayScaleFactor int
-	// Set to throttle the CHIP-8 exec loop (to mimic older computers)
-	Throttle bool
+	DisplayScaleFactor int `mapstructure:"display_scale_factor"`
 	// Max cycle speed of CHIP-8 exec loop
-	ThrottleSpeed int
+	ThrottleSpeed int `mapstructure:"throttle_speed"`
 	// Limit how many cycles the program is run for. For debug purposes.
-	CycleLimit int
+	CycleLimit int `mapstructure:"cycle_limit"`
 }
 
 func DefaultOptions() CHIP8Options {
 	return CHIP8Options{
 		DisplayScaleFactor: 1,
-		Throttle:           false,
-		ThrottleSpeed:      60,
+		ThrottleSpeed:      0,
 		CycleLimit:         -1,
 	}
 }
@@ -191,7 +188,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 	for exec {
 
 		// Throttle the CPU based on a configurable delay
-		if ch8.Options.Throttle {
+		if ch8.Options.ThrottleSpeed > 0 {
 			elapsedTime := time.Since(lastUpdate)
 			delay := time.Second / time.Duration(ch8.Options.ThrottleSpeed)
 			if elapsedTime < delay {
