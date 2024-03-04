@@ -31,6 +31,10 @@ var (
 	lastDelayTimerUpdate time.Time
 	lastSoundTimerUpdate time.Time
 	decrementInterval    = time.Second / timerFrequency
+	SupportedModes       = []string{
+		"CHIP-8 (default)",
+		"COSMAC-VIP",
+	}
 )
 
 //go:embed beep.mp3
@@ -114,6 +118,10 @@ type CHIP8Options struct {
 type COSMACQuirks struct {
 	// If set, reset VF to 0 during instructions 8XY1, 8XY2, 8XY3
 	ResetVF bool `mapstructure:"reset_vf"`
+}
+
+func (cq *COSMACQuirks) EnableAll() {
+	cq.ResetVF = true
 }
 
 // NewDefaultApp creates a new App with default options.

@@ -36,6 +36,9 @@ var debug bool
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Show debug messages")
 
+	rootCmd.Flags().BoolP("cosmac", "c", false, "Run in COSMAC VIP mode")
+	viper.BindPFlag("cosmac", rootCmd.Flags().Lookup("cosmac"))
+
 	cobra.OnInitialize(initConfig)
 }
 
@@ -54,8 +57,9 @@ func run(romFilePath string) {
 	app.Logger = logger
 	viper.Unmarshal(&app.Options)
 
-	if viper.IsSet("cosmac-vip") {
-		logger.Info("Cosmac VIP mode enabled")
+	if viper.IsSet("cosmac") {
+		logger.Info("COSMAC VIP mode enabled")
+		app.Options.CosmacQuirks.EnableAll()
 	}
 
 	ebiten.SetWindowSize(interpreter.DisplayWidth*app.Options.DisplayScaleFactor, interpreter.DisplayHeight*app.Options.DisplayScaleFactor)

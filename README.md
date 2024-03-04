@@ -22,6 +22,8 @@ Various aspects of the interpreter can be tweaked in these ways, listed by prece
     - `$XDG_CONFIG_HOME/chip8/`
     - Same directory that `chip8` is being executed from
 
+<!-- [`default.toml`](./default.toml) shows every configuration setting and quirk and their default values. -->
+
 This table summarizes the existing configuration values and how to set them.
 
 | Configuration | Default | TOML | Environment |
@@ -29,6 +31,15 @@ This table summarizes the existing configuration values and how to set them.
 | Change the display scale factor.<br>**1** uses the original 64x32 pixel display. | 10 | `display_scale_factor` | `CHIP8_DISPLAY_SCALE_FACTOR` |
 | Delay the rate the interpreter processes instructions | 0 | `throttle_speed` | `CHIP8_THROTTLE_SPEED` |
 | Stop execution after this many instructions are executed | 0 | `cycle_limit` | `CHIP8_CYCLE_LIMIT` |
+
+### Run Modes and Quirks
+Timendus provides this succinct description of what Quirks are:
+> CHIP-8, SUPER-CHIP and XO-CHIP have subtle differences in the way they interpret the bytecode. We often call these differences quirks...This is one of the hardest parts to "get right" and often a reason why "some games work, but some don't".
+
+All quirks belong to some other variation of CHIP-8. They can be set individually in `config.toml`. To use the different generations of CHIP-8, run with the appropriate flag set. This is equivalent to enabling all the quirks for that chipset:
+
+    # Enable all COSMAC VIP works
+    chip8 --cosmac <ROM>
 
 
 ## Resources
