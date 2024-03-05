@@ -17,12 +17,12 @@ While the program passes all test ROMs from [Timendus' Test Suite](https://githu
 
 ### Configuration
 Various aspects of the interpreter can be tweaked in these ways, listed by precedence:
-- Setting the appropriate Environment Variable.
-- Creating a `config.toml` file at one of the following locations:
+1. Setting the appropriate Environment Variable.
+1. Creating a `config.toml` file at one of the following locations:
     - `$XDG_CONFIG_HOME/chip8/`
     - Same directory that `chip8` is being executed from
 
-<!-- [`default.toml`](./default.toml) shows every configuration setting and quirk and their default values. -->
+Running `chip8 --write-config` will attempt to dump all values and their default values into the default configuration location
 
 This table summarizes the existing configuration values and how to set them.
 
@@ -41,6 +41,12 @@ All quirks belong to some other variation of CHIP-8. They can be set individuall
     # Enable all COSMAC VIP works
     chip8 --cosmac <ROM>
 
+#### COSMAC VIP ####
+The following quirks are grouped under `cosmac-vip` section in the configuration file.
+
+| Configuration Value | Description |
+|---------------------|-------------|
+| `reset_vf`          | The AND, OR and XOR opcodes (`8xy1`, `8xy2`, and `8xy3`) reset the flags register (`VF`) to zero
 
 ## Resources
 - http://www.emulator101.com/introduction-to-chip-8.html
