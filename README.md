@@ -18,9 +18,7 @@ While the program passes all test ROMs from [Timendus' Test Suite](https://githu
 ### Configuration
 Various aspects of the interpreter can be tweaked in these ways, listed by precedence:
 1. Setting the appropriate Environment Variable.
-1. Creating a `config.toml` file at one of the following locations:
-    - `$XDG_CONFIG_HOME/chip8/`
-    - Same directory that `chip8` is being executed from
+1. Creating a `config.toml` file in the same directory that `chip8` is being executed from
 
 Running `chip8 --write-config` will attempt to dump all values and their default values into the default configuration location
 

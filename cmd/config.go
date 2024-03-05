@@ -10,7 +10,6 @@ func initConfig() {
 	// Add config file search paths
 	viper.SetConfigType("toml")
 	viper.SetConfigName("config")
-	viper.AddConfigPath("$HOME/.config/chip8")
 	viper.AddConfigPath(".")
 
 	// Use env vars

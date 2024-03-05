@@ -33,8 +33,11 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if viper.GetBool("write-config") {
 			err := viper.SafeWriteConfig()
-			if err != nil {
-				log.Fatal(err)
+			if _, ok := err.(viper.ConfigFileAlreadyExistsError); ok {
+				err = viper.WriteConfig()
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		} else if viper.GetBool("list-modes") {
 			fmt.Println("Supported CHIP-8 variants:")
@@ -63,9 +66,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Show debug messages")
 
 	rootCmd.Flags().BoolP("cosmac", "c", false, "Run in COSMAC VIP mode")
-	viper.BindPFlag("cosmac", rootCmd.Flags().Lookup("cosmac"))
+	viper.BindPFlag("cosmac-vip.enabled", rootCmd.Flags().Lookup("cosmac"))
 
-	rootCmd.Flags().Bool("write-config", false, "Write current config to default location. Existing config files will be overwritten!")
+	rootCmd.Flags().Bool("write-config", false, "Write current config to default location. Existing config file will be overwritten!")
 	viper.BindPFlag("write-config", rootCmd.Flags().Lookup("write-config"))
 
 	rootCmd.Flags().Bool("list-modes", false, "Show supported CHIP-8 variants")
@@ -89,7 +92,7 @@ func run(romFilePath string) {
 	app.Logger = logger
 	viper.Unmarshal(&app.Options)
 
-	if viper.IsSet("cosmac") {
+	if viper.IsSet("cosmac-vip.enabled") {
 		logger.Info("COSMAC VIP mode enabled")
 		app.Options.CosmacQuirks.EnableAll()
 	}
