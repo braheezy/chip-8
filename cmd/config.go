@@ -8,16 +8,10 @@ import (
 
 func initConfig() {
 	// Add config file search paths
-	viper.AddConfigPath("$XDG_CONFIG_HOME/chip8")
-	viper.AddConfigPath(".")
 	viper.SetConfigType("toml")
 	viper.SetConfigName("config")
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			// Config file was found but another error was produced
-			panic(fmt.Errorf("fatal error config file: %w", err))
-		}
-	}
+	viper.AddConfigPath("$HOME/.config/chip8")
+	viper.AddConfigPath(".")
 
 	// Use env vars
 	viper.AutomaticEnv()
@@ -28,4 +22,14 @@ func initConfig() {
 
 	// Set sane defaults
 	viper.SetDefault("display_scale_factor", 10)
+	viper.SetDefault("throttle_speed", 0)
+	viper.SetDefault("instruction_limit", -1)
+	viper.SetDefault("cosmac-vip.reset_vf", false)
+
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			// Config file was found but another error was produced
+			panic(fmt.Errorf("fatal error config file: %w", err))
+		}
+	}
 }
