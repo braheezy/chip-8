@@ -116,12 +116,15 @@ type CHIP8Options struct {
 }
 
 type COSMACQuirks struct {
-	// If set, reset VF to 0 during instructions 8XY1, 8XY2, 8XY3
+	// reset VF to 0 during instructions 8XY1, 8XY2, 8XY3
 	ResetVF bool `mapstructure:"reset_vf"`
+	// increment memory index I during FX55 and FX65
+	IncrementI bool `mapstructure:"increment_i"`
 }
 
 func (cq *COSMACQuirks) EnableAll() {
 	cq.ResetVF = true
+	cq.IncrementI = true
 }
 
 // NewDefaultApp creates a new App with default options.
@@ -550,14 +553,19 @@ func (ch8 *CHIP8) stepInterpreter() {
 				ch8.Logger.Debugf("[%04X] Storing V0 through V%d at memory address I", instruction, registerX)
 				for i := uint16(0); i <= uint16(registerX); i++ {
 					ch8.memory[ch8.I+i] = ch8.V[i]
+					if ch8.Options.CosmacQuirks.IncrementI {
+						ch8.I += 1
+					}
 				}
 
 			case 0x65:
 				// FX65: Read registers V0 through VX from memory starting at address I
-				// TODO: Original CHIP-8 interpreter for the COSMAC VIP actually incremented the I register while it worked. Each time it stored or loaded one register, it incremented I. After the instruction was finished, I would be set to the new value I + X + 1.
 				ch8.Logger.Debugf("[%04X] Reading V0 through V%d from memory address I", instruction, registerX)
 				for i := uint16(0); i <= uint16(registerX); i++ {
 					ch8.V[i] = ch8.memory[ch8.I+i]
+					if ch8.Options.CosmacQuirks.IncrementI {
+						ch8.I += 1
+					}
 				}
 
 			default:

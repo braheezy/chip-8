@@ -45,6 +45,7 @@ The following quirks are grouped under `cosmac-vip` section in the configuration
 | Configuration Value | Description |
 |---------------------|-------------|
 | `reset_vf`          | The AND, OR and XOR opcodes (`8xy1`, `8xy2`, and `8xy3`) reset the flags register (`VF`) to zero
+| `increment_i`       | Increment the memory index while `Fx55` and `Fx56` operate
 
 ## Resources
 - http://www.emulator101.com/introduction-to-chip-8.html
