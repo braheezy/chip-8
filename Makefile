@@ -5,6 +5,7 @@ GOCMD ?= go
 GOBUILD := $(GOCMD) build
 GOINSTALL := $(GOCMD) install
 GOARCH := amd64
+DLV_PORT := 44571
 
 # Build definitions
 BUILD_ENTRY := $(PWD)
@@ -34,13 +35,13 @@ command-style = $(BLUE)$(BOLD)$1$(END)  $(ITALIC)$(YELLOW)$2$(END)
 
 define help_text
 $(PURPLE)$(BOLD)Targets:$(END)
-  - $(call command-style,all,     Build $(PACKAGE) for all targets (Linux, Windows, Mac, 64-bit))
+  - $(call command-style,all,      Build $(PACKAGE) for all targets (Linux, Windows, Mac, 64-bit))
   - $(call command-style,build,    Build $(PACKAGE) for current host architecture)
   - $(call command-style,run,      Build and run $(PACKAGE) for current host)
   - $(call command-style,install,  Build and install $(PACKAGE) for current host)
-  - $(call command-style,debug,    Run a dlv debug headless session)
+  - $(call command-style,debug,    Run a dlv debug headless session on :$(DLV_PORT))
   - $(call command-style,test,     Run all Go tests)
-  - $(call command-style,test-<N>, Run a numbered ROM test)
+  - $(call command-style,test-#,   Run a numbered ROM test)
   - $(call command-style,clean,    Delete built artifacts)
   - $(call command-style,[help],   Print this help)
 endef
@@ -104,7 +105,7 @@ install: $(BIN)
 #
 
 # Define the list of test files
-ROM_FILES := 2-ibm-logo.ch8 3-corax+.ch8 4-flags.ch8 6-keypad.ch8 7-beep.ch8
+ROM_FILES := 2-ibm-logo.ch8 3-corax+.ch8 4-flags.ch8 5-quirks.ch8 6-keypad.ch8 7-beep.ch8
 
 # Define the URL to download the file
 DOWNLOAD_URL := https://github.com/Timendus/chip8-test-suite/releases/download/v4.1
@@ -118,12 +119,15 @@ $(1):
 	fi
 endef
 
+# Extra flags for the BIN command when testing "5-quirks.ch8"
+EXTRA_FLAGS_5_QUIRKS := --cosmac
+
 # Rule to run a test for a specific file
 define test_rule
 .PHONY: test-$(shell echo $(1) | cut -d'-' -f1)
 test-$(shell echo $(1) | cut -d'-' -f1): $(BIN) $(1)
 	@echo "Running test-$(shell echo $(1) | cut -d'-' -f1) for $(1)"; \
-	$$^
+	[ "$(1)" = "5-quirks.ch8" ] && CHIP8_THROTTLE_SPEED=60 $$^ $(EXTRA_FLAGS_5_QUIRKS) || $$^
 endef
 
 # Create test rules for each test file

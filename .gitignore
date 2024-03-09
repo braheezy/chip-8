@@ -1,2 +1,5 @@
 *.ch8
 bin/
+/chip8
+TODO
+/config.toml

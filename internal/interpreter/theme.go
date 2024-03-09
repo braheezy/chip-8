@@ -1,4 +1,4 @@
-package main
+package interpreter
 
 // From https://rosepinetheme.com/palette/ingredients/
 
