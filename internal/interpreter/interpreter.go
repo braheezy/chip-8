@@ -167,6 +167,7 @@ func DefaultCHIP8Options() CHIP8Options {
 		DisplayScaleFactor: 1,
 		ThrottleSpeed:      0,
 		InstructionLimit:   -1,
+		CosmacQuirks:       COSMACQuirks{},
 	}
 }
 
@@ -204,9 +205,9 @@ func (ch8 *CHIP8) stepInterpreter() {
 	for exec {
 
 		// Throttle the CPU based on a configurable delay
-		if ch8.Options.ThrottleSpeed > 0 {
+		if ch8.Options.ThrottleSpeed*10 > 0 {
 			elapsedTime := time.Since(lastUpdate)
-			delay := time.Second / time.Duration(ch8.Options.ThrottleSpeed)
+			delay := time.Second / time.Duration(ch8.Options.ThrottleSpeed*10)
 			if elapsedTime < delay {
 				time.Sleep(delay - elapsedTime)
 			}
@@ -218,6 +219,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 		}
 
 		instruction := ch8.readNextInstruction()
+		ch8.Logger.Debugf("[%04X] %04X", ch8.pc-2, instruction)
 
 		firstNibble := instruction.nibbles(0, 0)
 
@@ -533,6 +535,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 				} else {
 					ch8.pc -= 2
 				}
+				exec = false
 
 			case 0x29:
 				// FX29: Set I to the location of the sprite for the character in register VX
@@ -549,13 +552,13 @@ func (ch8 *CHIP8) stepInterpreter() {
 
 			case 0x55:
 				// FX55: Store registers V0 through VX in memory starting at address I
-				// TODO: Original CHIP-8 interpreter for the COSMAC VIP actually incremented the I register while it worked. Each time it stored or loaded one register, it incremented I. After the instruction was finished, I would be set to the new value I + X + 1.
 				ch8.Logger.Debugf("[%04X] Storing V0 through V%d at memory address I", instruction, registerX)
 				for i := uint16(0); i <= uint16(registerX); i++ {
 					ch8.memory[ch8.I+i] = ch8.V[i]
-					if ch8.Options.CosmacQuirks.IncrementI {
-						ch8.I += 1
-					}
+				}
+				if ch8.Options.CosmacQuirks.IncrementI {
+					// COSMAC VIP incremented the I register while it worked. Each time it stored or loaded one register, it incremented I. After the instruction was finished, I would be set to the new value I + X + 1.
+					ch8.I = registerX + 1
 				}
 
 			case 0x65:
@@ -563,9 +566,10 @@ func (ch8 *CHIP8) stepInterpreter() {
 				ch8.Logger.Debugf("[%04X] Reading V0 through V%d from memory address I", instruction, registerX)
 				for i := uint16(0); i <= uint16(registerX); i++ {
 					ch8.V[i] = ch8.memory[ch8.I+i]
-					if ch8.Options.CosmacQuirks.IncrementI {
-						ch8.I += 1
-					}
+				}
+				if ch8.Options.CosmacQuirks.IncrementI {
+					// COSMAC VIP incremented the I register while it worked. Each time it stored or loaded one register, it incremented I. After the instruction was finished, I would be set to the new value I + X + 1.
+					ch8.I = registerX + 1
 				}
 
 			default:

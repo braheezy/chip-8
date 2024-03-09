@@ -24,6 +24,7 @@ func initConfig() {
 	viper.SetDefault("throttle_speed", 0)
 	viper.SetDefault("instruction_limit", -1)
 	viper.SetDefault("cosmac-vip.reset_vf", false)
+	viper.SetDefault("cosmac-vip.increment_i", false)
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {

@@ -31,12 +31,16 @@ var rootCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := newDefaultLogger()
 		if viper.GetBool("write-config") {
+			// Don't get caught in forever loop of writing config file
+			viper.Set("write-config", false)
 			err := viper.SafeWriteConfig()
 			if _, ok := err.(viper.ConfigFileAlreadyExistsError); ok {
+				logger.Info("Config file already exists, overwriting...")
 				err = viper.WriteConfig()
 				if err != nil {
-					log.Fatal(err)
+					logger.Fatal(err)
 				}
 			}
 		} else if viper.GetBool("list-modes") {
@@ -45,7 +49,7 @@ var rootCmd = &cobra.Command{
 				fmt.Println(mode)
 			}
 		} else {
-			run(args[0])
+			run(args[0], logger)
 		}
 	},
 	CompletionOptions: cobra.CompletionOptions{
@@ -77,22 +81,21 @@ func init() {
 	cobra.OnInitialize(initConfig)
 }
 
-func run(romFilePath string) {
+func run(romFilePath string, logger *log.Logger) {
 	chipFileName := filepath.Base(romFilePath)
 	chipData, err := os.ReadFile(romFilePath)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
-
-	app := interpreter.NewCHIP8(&chipData)
-	logger := newDefaultLogger()
 	if debug {
 		logger.SetLevel(log.DebugLevel)
 	}
+
+	app := interpreter.NewCHIP8(&chipData)
 	app.Logger = logger
 	viper.Unmarshal(&app.Options)
 
-	if viper.IsSet("cosmac-vip.enabled") {
+	if viper.GetBool("cosmac-vip.enabled") {
 		logger.Info("COSMAC VIP mode enabled")
 		app.Options.CosmacQuirks.EnableAll()
 	}
@@ -102,7 +105,7 @@ func run(romFilePath string) {
 	ebiten.SetTPS(ebiten.SyncWithFPS)
 
 	if err := ebiten.RunGame(app); err != nil && err != ebiten.Termination {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 }
