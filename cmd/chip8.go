@@ -91,20 +91,20 @@ func run(romFilePath string, logger *log.Logger) {
 		logger.SetLevel(log.DebugLevel)
 	}
 
-	app := interpreter.NewCHIP8(&chipData)
-	app.Logger = logger
-	viper.Unmarshal(&app.Options)
+	chip8 := interpreter.NewCHIP8(&chipData)
+	chip8.Logger = logger
+	viper.Unmarshal(&chip8.Options)
 
 	if viper.GetBool("cosmac-vip.enabled") {
 		logger.Info("COSMAC VIP mode enabled")
-		app.Options.CosmacQuirks.EnableAll()
+		chip8.Options.CosmacQuirks.EnableAll()
 	}
 
-	ebiten.SetWindowSize(interpreter.DisplayWidth*app.Options.DisplayScaleFactor, interpreter.DisplayHeight*app.Options.DisplayScaleFactor)
+	ebiten.SetWindowSize(interpreter.DisplayWidth*chip8.Options.DisplayScaleFactor, interpreter.DisplayHeight*chip8.Options.DisplayScaleFactor)
 	ebiten.SetWindowTitle(chipFileName)
 	ebiten.SetTPS(ebiten.SyncWithFPS)
 
-	if err := ebiten.RunGame(app); err != nil && err != ebiten.Termination {
+	if err := ebiten.RunGame(chip8); err != nil && err != ebiten.Termination {
 		logger.Fatal(err)
 	}
 
