@@ -5,6 +5,7 @@ GOCMD ?= go
 GOBUILD := $(GOCMD) build
 GOINSTALL := $(GOCMD) install
 GOARCH := amd64
+DLV_PORT := 44571
 
 # Build definitions
 BUILD_ENTRY := $(PWD)
@@ -34,13 +35,13 @@ command-style = $(BLUE)$(BOLD)$1$(END)  $(ITALIC)$(YELLOW)$2$(END)
 
 define help_text
 $(PURPLE)$(BOLD)Targets:$(END)
-  - $(call command-style,all,     Build $(PACKAGE) for all targets (Linux, Windows, Mac, 64-bit))
+  - $(call command-style,all,      Build $(PACKAGE) for all targets (Linux, Windows, Mac, 64-bit))
   - $(call command-style,build,    Build $(PACKAGE) for current host architecture)
   - $(call command-style,run,      Build and run $(PACKAGE) for current host)
   - $(call command-style,install,  Build and install $(PACKAGE) for current host)
-  - $(call command-style,debug,    Run a dlv debug headless session)
+  - $(call command-style,debug,    Run a dlv debug headless session on :$(DLV_PORT))
   - $(call command-style,test,     Run all Go tests)
-  - $(call command-style,test-<N>, Run a numbered ROM test)
+  - $(call command-style,test-#,   Run a numbered ROM test)
   - $(call command-style,clean,    Delete built artifacts)
   - $(call command-style,[help],   Print this help)
 endef
