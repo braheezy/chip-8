@@ -13,8 +13,7 @@ Log instructions as they are processed (Warning! produces lots of messages):
 
     chip8 -debug <chip-8 file>
 
-While the program passes all test ROMs from [Timendus' Test Suite](https://github.com/Timendus/chip8-test-suite), every
-CHIP-8 game I pulled from the Internet had some sort of issue. I have no idea if my program or the ROM is to blame.
+While the program passes all test ROMs from [Timendus' Test Suite](https://github.com/Timendus/chip8-test-suite), YMMV with random ROMs you pull from the Internet.
 
 ## Resources
 - http://www.emulator101.com/introduction-to-chip-8.html
