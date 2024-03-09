@@ -91,9 +91,10 @@ func run(romFilePath string, logger *log.Logger) {
 		logger.SetLevel(log.DebugLevel)
 	}
 
-	chip8 := interpreter.NewCHIP8(&chipData)
+	opts := interpreter.DefaultCHIP8Options()
+	viper.Unmarshal(&opts)
+	chip8 := interpreter.NewCHIP8(&chipData, opts)
 	chip8.Logger = logger
-	viper.Unmarshal(&chip8.Options)
 
 	if viper.GetBool("cosmac-vip.enabled") {
 		logger.Info("COSMAC VIP mode enabled")
