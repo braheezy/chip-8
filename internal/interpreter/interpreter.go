@@ -141,8 +141,8 @@ func NewCHIP8(program *[]byte, opts CHIP8Options) *CHIP8 {
 	// Load program into memory.
 	copy(chip8.memory[programStartAddress:], *program)
 
-	chip8.display.onColor = Colors[chip8.Options.OnColor].RGBA()
-	chip8.display.offColor = Colors[chip8.Options.OffColor].RGBA()
+	chip8.display.onColor = Colors[chip8.Options.OnColor]
+	chip8.display.offColor = Colors[chip8.Options.OffColor]
 
 	// Load font into memory
 	// From 0x000 to 0x1FF
