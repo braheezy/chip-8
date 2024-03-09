@@ -15,9 +15,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "chip8 romFile",
+	Use:   "chip8 <rom>",
 	Short: "chip8 is a useful CHIP-8 interpreter",
-	Long:  `Run CHIP-8 programs from the CLI with ease`,
+	Long:  "Run CHIP-8 programs from the CLI with ease",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if viper.GetBool("list-modes") {
 			return nil
