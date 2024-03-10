@@ -12,7 +12,7 @@ import (
 func RunTUI(chip8 *CHIP8, filename string) {
 	chip8.Logger.Info("Running TUI", "romFile", filename)
 
-	app := &App{chip8}
+	app := &App{Chip8: chip8}
 
 	p := tea.NewProgram(app)
 	p.SetWindowTitle(filename)
@@ -22,8 +22,14 @@ func RunTUI(chip8 *CHIP8, filename string) {
 
 }
 
+// Hack in a delay because BubbleTea doesn't do real time input(?)
+// If set to 0, all inputs are "held" continuously
+// This value seems to hit the sweet spot.
+const defaultInputDelay = 85
+
 type App struct {
-	Chip8 *CHIP8
+	Chip8             *CHIP8
+	CurrentInputDelay int
 }
 
 type execMsg interface{}
@@ -47,6 +53,7 @@ func (app *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				app.Chip8.Logger.Warnf("user pressing %X", keypress)
 				app.Chip8.pressedKeys = []byte{keypress}
 				app.Chip8.dirtyKeys = true
+				app.CurrentInputDelay = defaultInputDelay
 			}
 		}
 	}
@@ -74,6 +81,13 @@ func (app *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	// CurrentInputDelay prevents the pressed key from being cleared too quickly
+	if !app.Chip8.dirtyKeys && app.CurrentInputDelay == 0 {
+		app.Chip8.pressedKeys = []byte{}
+	} else {
+		app.CurrentInputDelay--
+	}
+
 	app.Chip8.stepInterpreter()
 
 	if int(app.Chip8.pc) == app.Chip8.programSize {
@@ -83,7 +97,6 @@ func (app *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return app, func() tea.Msg {
 		return execMsg(true)
 	}
-
 }
 
 func (app *App) View() string {
