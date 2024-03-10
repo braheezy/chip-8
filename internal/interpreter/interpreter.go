@@ -171,7 +171,7 @@ func DefaultCHIP8Options() CHIP8Options {
 		ThrottleSpeed:      0,
 		InstructionLimit:   -1,
 		CosmacQuirks:       COSMACQuirks{},
-		OffColor:           "Gold",
+		OffColor:           "Iris",
 		OnColor:            "Pine",
 	}
 }

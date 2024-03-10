@@ -23,6 +23,8 @@ func initConfig() {
 	viper.SetDefault("display_scale_factor", 10)
 	viper.SetDefault("throttle_speed", 0)
 	viper.SetDefault("instruction_limit", -1)
+	viper.SetDefault("off_color", "Iris")
+	viper.SetDefault("on_color", "Pine")
 	viper.SetDefault("cosmac-vip.reset_vf", false)
 	viper.SetDefault("cosmac-vip.increment_i", false)
 

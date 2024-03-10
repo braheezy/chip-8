@@ -58,7 +58,10 @@ This table summarizes the existing configuration values and how to set them.
 | Change the display scale factor.<br>**1** uses the original 64x32 pixel display. | 10 | `display_scale_factor` | `CHIP8_DISPLAY_SCALE_FACTOR` |
 | Delay the rate the interpreter processes instructions<br>**60** gives an execution rate of 60 Hz | 0 | `throttle_speed` | `CHIP8_THROTTLE_SPEED` |
 | Stop execution after this many instructions are executed | 0 | `cycle_limit` | `CHIP8_CYCLE_LIMIT` |
+| Set the color used for Off pixels | "Iris" | `off_color` | `CHIP8_OFF_COLOR`
+| Set the color used for On pixels | "Pine" | `off_color` | `CHIP8_OFF_COLOR`
 
+The colors can be chosen from the [Rose Pine palette](https://rosepinetheme.com/palette/).
 ### Run Modes and Quirks
 Timendus provides this succinct description of what Quirks are:
 > CHIP-8, SUPER-CHIP and XO-CHIP have subtle differences in the way they interpret the bytecode. We often call these differences quirks...This is one of the hardest parts to "get right" and often a reason why "some games work, but some don't".
@@ -78,6 +81,9 @@ The following quirks are grouped under `cosmac-vip` section in the configuration
 
 You might also want to set `throttle_speed` to `60` if you're setting all these values for older games.
 
+### Theme
+You can tweak the off and on color by
+
 ## Resources
 - Introduction to the building blocks needed to write an interpreter for CHIP-8: [realemulator101's Introduction to CHIP-8](http://www.emulator101.com/introduction-to-chip-8.html)
 - How to write the whole thing, but hints only. I used this the most ✨: [Tobias' Guide to making a CHIP-8 emulator](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/)
@@ -93,3 +99,8 @@ ROMs:
 - [JohnEarnest's chip8Archive](https://johnearnest.github.io/chip8Archive/)
 
 ## Demos
+![pong](./assets/pong-demo.gif)
+
+![octojam](./assets/octojam-demo.gif)
+
+![october](./assets/october-demo.gif)
