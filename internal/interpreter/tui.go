@@ -3,6 +3,7 @@ package interpreter
 import (
 	"errors"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -25,7 +26,7 @@ type App struct {
 	Chip8 *CHIP8
 }
 
-type execMsg bool
+type execMsg interface{}
 
 func (app *App) Init() tea.Cmd {
 	return func() tea.Msg {
@@ -48,25 +49,40 @@ func (app *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				app.Chip8.dirtyKeys = true
 			}
 		}
-	// Run interpreter exec loop
-	case execMsg:
-
-		app.Chip8.stepInterpreter()
-		return app, func() tea.Msg {
-			return execMsg(true)
+	}
+	elapsed := time.Since(lastDelayTimerUpdate)
+	if app.Chip8.delayTimer > 0 {
+		if elapsed >= decrementInterval {
+			app.Chip8.delayTimer--
+			elapsed -= decrementInterval
+			lastDelayTimerUpdate = lastDelayTimerUpdate.Add(decrementInterval)
 		}
 	}
 
-	// if !app.Chip8.dirtyKeys {
-	// 	app.Chip8.Logger.Warn("clearing keys")
-	// 	app.Chip8.pressedKeys = []byte{}
-	// }
+	elapsed = time.Since(lastSoundTimerUpdate)
+	if app.Chip8.soundTimer > 0 {
+		app.Chip8.beep.Play()
+		if elapsed >= decrementInterval {
+			app.Chip8.soundTimer--
+			elapsed -= decrementInterval
+			lastSoundTimerUpdate = lastSoundTimerUpdate.Add(decrementInterval)
+		}
+	} else {
+		if app.Chip8.beep.IsPlaying() {
+			app.Chip8.beep.Pause()
+			app.Chip8.beep.SetPosition(0)
+		}
+	}
+
+	app.Chip8.stepInterpreter()
 
 	if int(app.Chip8.pc) == app.Chip8.programSize {
 		return app, tea.Quit
 	}
 
-	return app, nil
+	return app, func() tea.Msg {
+		return execMsg(true)
+	}
 
 }
 
