@@ -1,19 +1,12 @@
 # CHIP-8
 A Go implementation of a [CHIP-8 interpreter](https://www.wikiwand.com/en/CHIP-8).
 
-```
-Run CHIP-8 programs from the CLI with ease
+![standard version](./assets/outlaw-demo.gif)
 
-Usage:
-  chip8 romFile [flags]
+Or as a TUI!
 
-Flags:
-  -c, --cosmac         Run in COSMAC VIP mode
-  -d, --debug          Show debug messages
-  -h, --help           help for chip8
-      --list-modes     Show supported CHIP-8 variants
-      --write-config   Write current config to default location. Existing config file will be overwritten!
-```
+![tui version](./assets/outlaw-demo-tui.gif)
+
 
 ## Installation
 Download the latest [release](https://github.com/braheezy/chip-8/releases) for your platform.
@@ -28,6 +21,28 @@ Log instructions as they are processed (Warning! produces lots of messages):
     chip8 -debug <chip-8 file>
 
 While the program passes all test ROMs from [Timendus' Test Suite](https://github.com/Timendus/chip8-test-suite), YMMV with random ROMs you pull from the Internet.
+
+Here's the full usage:
+```
+Run CHIP-8 programs from the CLI with ease
+
+Usage:
+  chip8 <rom> [flags]
+  chip8 [command]
+
+Available Commands:
+  help        Help about any command
+  tui         Run in TUI mode
+
+Flags:
+  -c, --cosmac         Run in COSMAC VIP mode
+  -d, --debug          Show debug messages
+  -h, --help           help for chip8
+      --list-modes     Show supported CHIP-8 variants
+      --write-config   Write current config to default location. Existing config file will be overwritten!
+
+Use "chip8 [command] --help" for more information about a command.
+```
 
 ### Configuration
 Various aspects of the interpreter can be tweaked in these ways, listed by precedence:
@@ -73,3 +88,6 @@ You might also want to set `throttle_speed` to `60` if you're setting all these 
 When things got quirky:
 - [CHIP-8 extensions and compatibility](https://chip-8.github.io/extensions/)
 - [CHIP-8 Variant Opcode Table](https://chip8.gulrak.net/)
+
+ROMs:
+- [JohnEarnest's chip8Archive](https://johnearnest.github.io/chip8Archive/)

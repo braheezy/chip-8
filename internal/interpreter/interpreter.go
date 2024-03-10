@@ -113,6 +113,9 @@ type CHIP8Options struct {
 	InstructionLimit int `mapstructure:"instruction_limit"`
 	// Enable quirks for COSMAC-like behavior
 	CosmacQuirks COSMACQuirks `mapstructure:"cosmac-vip"`
+	// Colors!
+	OffColor string `mapstructure:"off_color"`
+	OnColor  string `mapstructure:"on_color"`
 }
 
 type COSMACQuirks struct {
@@ -128,18 +131,18 @@ func (cq *COSMACQuirks) EnableAll() {
 }
 
 // NewDefaultApp creates a new App with default options.
-func NewCHIP8(program *[]byte) *CHIP8 {
+func NewCHIP8(program *[]byte, opts CHIP8Options) *CHIP8 {
 	chip8 := &CHIP8{
 		pc:      programStartAddress,
-		Options: DefaultCHIP8Options(),
+		Options: opts,
 	}
 
 	chip8.programSize = len(*program) + programStartAddress
 	// Load program into memory.
 	copy(chip8.memory[programStartAddress:], *program)
 
-	chip8.display.onColor = Pine.RGBA()
-	chip8.display.offColor = Gold.RGBA()
+	chip8.display.onColor = Colors[chip8.Options.OnColor]
+	chip8.display.offColor = Colors[chip8.Options.OffColor]
 
 	// Load font into memory
 	// From 0x000 to 0x1FF
@@ -168,6 +171,8 @@ func DefaultCHIP8Options() CHIP8Options {
 		ThrottleSpeed:      0,
 		InstructionLimit:   -1,
 		CosmacQuirks:       COSMACQuirks{},
+		OffColor:           "Gold",
+		OnColor:            "Pine",
 	}
 }
 
@@ -583,7 +588,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 }
 
 // Convert keypad key to hex value
-func keyToHex(key ebiten.Key) (byte, error) {
+func ebitenKeyToHex(key ebiten.Key) (byte, error) {
 	var hexValue byte
 	switch key {
 	case ebiten.KeyX:

@@ -15,9 +15,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "chip8 romFile",
+	Use:   "chip8 <rom>",
 	Short: "chip8 is a useful CHIP-8 interpreter",
-	Long:  `Run CHIP-8 programs from the CLI with ease`,
+	Long:  "Run CHIP-8 programs from the CLI with ease",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if viper.GetBool("list-modes") {
 			return nil
@@ -91,20 +91,21 @@ func run(romFilePath string, logger *log.Logger) {
 		logger.SetLevel(log.DebugLevel)
 	}
 
-	app := interpreter.NewCHIP8(&chipData)
-	app.Logger = logger
-	viper.Unmarshal(&app.Options)
+	opts := interpreter.DefaultCHIP8Options()
+	viper.Unmarshal(&opts)
+	chip8 := interpreter.NewCHIP8(&chipData, opts)
+	chip8.Logger = logger
 
 	if viper.GetBool("cosmac-vip.enabled") {
 		logger.Info("COSMAC VIP mode enabled")
-		app.Options.CosmacQuirks.EnableAll()
+		chip8.Options.CosmacQuirks.EnableAll()
 	}
 
-	ebiten.SetWindowSize(interpreter.DisplayWidth*app.Options.DisplayScaleFactor, interpreter.DisplayHeight*app.Options.DisplayScaleFactor)
+	ebiten.SetWindowSize(interpreter.DisplayWidth*chip8.Options.DisplayScaleFactor, interpreter.DisplayHeight*chip8.Options.DisplayScaleFactor)
 	ebiten.SetWindowTitle(chipFileName)
 	ebiten.SetTPS(ebiten.SyncWithFPS)
 
-	if err := ebiten.RunGame(app); err != nil && err != ebiten.Termination {
+	if err := ebiten.RunGame(chip8); err != nil && err != ebiten.Termination {
 		logger.Fatal(err)
 	}
 
