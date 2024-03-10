@@ -588,7 +588,7 @@ func (ch8 *CHIP8) stepInterpreter() {
 }
 
 // Convert keypad key to hex value
-func keyToHex(key ebiten.Key) (byte, error) {
+func ebitenKeyToHex(key ebiten.Key) (byte, error) {
 	var hexValue byte
 	switch key {
 	case ebiten.KeyX:

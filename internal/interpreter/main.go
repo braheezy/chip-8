@@ -44,7 +44,7 @@ func (chip8 *CHIP8) Update() error {
 		// For any pressed keys, convert them to hex
 		var keypresses []byte
 		for _, key := range keys {
-			keypress, err := keyToHex(key)
+			keypress, err := ebitenKeyToHex(key)
 			if err == nil {
 				keypresses = append(keypresses, keypress)
 			}
