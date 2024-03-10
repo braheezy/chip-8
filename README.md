@@ -1,9 +1,10 @@
 # CHIP-8
 A Go implementation of a [CHIP-8 interpreter](https://www.wikiwand.com/en/CHIP-8).
 
+Run with a standalone window:
 ![standard version](./assets/outlaw-demo.gif)
 
-Or as a TUI!
+Or as a TUI:
 
 ![tui version](./assets/outlaw-demo-tui.gif)
 
