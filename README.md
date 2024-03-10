@@ -7,7 +7,7 @@ Or as a TUI!
 
 ![tui version](./assets/outlaw-demo-tui.gif)
 
-
+See more [demos here](#demos).
 ## Installation
 Download the latest [release](https://github.com/braheezy/chip-8/releases) for your platform.
 
@@ -91,3 +91,5 @@ When things got quirky:
 
 ROMs:
 - [JohnEarnest's chip8Archive](https://johnearnest.github.io/chip8Archive/)
+
+## Demos

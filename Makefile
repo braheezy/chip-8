@@ -4,6 +4,10 @@ PACKAGE := chip8
 GOCMD ?= go
 GOBUILD := $(GOCMD) build
 GOINSTALL := $(GOCMD) install
+ifndef $(GOPATH)
+    GOPATH=$(shell go env GOPATH)
+    export GOPATH
+endif
 GOARCH := amd64
 DLV_PORT := 44571
 
@@ -96,8 +100,9 @@ debug:
 	@dlv debug --listen ":44571" --headless $(BUILD_ENTRY)
 
 install: $(BIN)
-	@echo -e "$(YELLOW)🚀 Installing $(BIN) to appropriate location...$(END)"
+	@echo -e "$(YELLOW)🚀 Installing $(BIN) to $(GOPATH)/bin...$(END)"
 	@$(GOINSTALL) $(BUILD_ENTRY)
+	@mv $(GOPATH)/bin/chip-8 $(GOPATH)/bin/$(PACKAGE)
 	@echo -e "$(GREEN)✅ Installation complete!$(END)"
 
 #
