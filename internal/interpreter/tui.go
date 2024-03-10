@@ -30,6 +30,8 @@ const defaultInputDelay = 85
 type App struct {
 	Chip8             *CHIP8
 	CurrentInputDelay int
+	terminalHeight    int
+	terminalWidth     int
 }
 
 type execMsg interface{}
@@ -43,6 +45,18 @@ func (app *App) Init() tea.Cmd {
 func (app *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		needsRepaint := false
+		if msg.Width < app.terminalWidth {
+			needsRepaint = true
+		}
+		app.terminalHeight = msg.Height
+		app.terminalWidth = msg.Width
+
+		if needsRepaint {
+			return app, tea.ClearScreen
+		}
+
 	// User pressed a key
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" || msg.String() == "esc" {
